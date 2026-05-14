@@ -206,12 +206,14 @@ const colorSpec = (() => {
     // 5 bins (was 7) — at the n=7 width the quantile breaks were colliding
     // into an unreadable run-on of decimals. 5 bins gives 6 visible
     // breakpoints, plenty of color resolution and readable labels.
-    const dataValues = rows.toArray()
-      .filter(r =>
-        r.value != null &&
-        (!hasSuppression || (Number(r.n_postings) ?? 0) >= suppressBelow)
-      )
-      .map(r => Number(r.value));
+    const dataValues = [];
+    for (const r of panel) {
+      if (r.year !== yr) continue;
+      const v = r[metric.key];
+      if (v == null) continue;
+      if (hasSuppression && Number(r.total_postings) < suppressBelow) continue;
+      dataValues.push(Number(v));
+    }
     return {
       type: "quantile",
       n: 5,
