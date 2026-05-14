@@ -14,7 +14,14 @@ import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, METRIC_INFO, metricSelect, m
 // Load county metadata and the county-year panel as an in-memory array.
 // Single GET per file; all queries below are array operations on `panel`.
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
+const _csvText = await FileAttachment("data/county_year_panel_export.csv").text();
+const _STR_COLS = new Set(["county", "rucc_tier"]);
+const panel = d3.csvParse(_csvText, r => {
+  for (const k in r) {
+    if (!_STR_COLS.has(k)) r[k] = r[k] === "" ? null : +r[k];
+  }
+  return r;
+});
 ```
 
 ```js

@@ -19,7 +19,14 @@ import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, fipsForData, C
 // JS numbers (not BigInt) for every numeric field — no coercion needed.
 const usTopo  = await FileAttachment("data/us-counties.json").json();
 const cMeta   = await FileAttachment("data/county-meta.json").json();
-const panel   = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
+const _csvText = await FileAttachment("data/county_year_panel_export.csv").text();
+const _STR_COLS = new Set(["county", "rucc_tier"]);
+const panel = d3.csvParse(_csvText, r => {
+  for (const k in r) {
+    if (!_STR_COLS.has(k)) r[k] = r[k] === "" ? null : +r[k];
+  }
+  return r;
+});
 
 const counties = topojson.feature(usTopo, usTopo.objects.counties);
 const states   = topojson.mesh(usTopo, usTopo.objects.states, (a, b) => a !== b);

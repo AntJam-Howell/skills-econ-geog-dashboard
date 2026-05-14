@@ -17,7 +17,14 @@ import {countySelector} from "./components/countySelector.js";
 // Single GET per file. iqrRows and countyRows below are derived from
 // `panel` via JS array operations (no DuckDB-WASM).
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
+const _csvText = await FileAttachment("data/county_year_panel_export.csv").text();
+const _STR_COLS = new Set(["county", "rucc_tier"]);
+const panel = d3.csvParse(_csvText, r => {
+  for (const k in r) {
+    if (!_STR_COLS.has(k)) r[k] = r[k] === "" ? null : +r[k];
+  }
+  return r;
+});
 ```
 
 ```js
