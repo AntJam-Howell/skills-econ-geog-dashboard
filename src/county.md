@@ -1,0 +1,378 @@
+---
+title: County profiles
+toc: false
+---
+
+# County profiles
+
+Pick a county from the search box, click a county on the **Spatial visualization** page, or jump in from **County comparisons**. Each sparkline shows the county's 2010–2024 trajectory against the national distribution. The legend below the controls explains the line styles and shaded band.
+
+```js
+import {DuckDBClient} from "npm:@observablehq/duckdb";
+import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, fipsForData, CT_PLANNING_REGION_NAMES, CT_BRIDGE, METRIC_INFO} from "./components/utils.js";
+import {countySelector} from "./components/countySelector.js";
+```
+
+```js
+const cMeta = await FileAttachment("data/county-meta.json").json();
+const db = await DuckDBClient.of({
+  panel: FileAttachment("data/county_year_panel_export.parquet")
+});
+```
+
+```js
+// Read fips from URL ?fips=XXXXX, fall back to NYC (36061) as default.
+const urlFips = (() => {
+  const p = new URLSearchParams(location.search).get("fips");
+  if (p && /^\d{5}$/.test(p)) return p;
+  return "36061";
+})();
+```
+
+```js
+const selectedFips = view(countySelector({cMeta, value: urlFips, label: "County"}));
+```
+
+```js
+const fips = selectedFips || urlFips;
+const meta = cMeta[fips] || {name: "Unknown", state: ""};
+// CT bridge: historic county FIPS → planning-region FIPS for panel queries
+const dataFips = fipsForData(fips);
+const isBridged = dataFips !== fips;
+const bridgeNote = isBridged
+  ? html` <span class="county-bridge-note">→ data from ${CT_PLANNING_REGION_NAMES[dataFips] ?? dataFips}</span>`
+  : "";
+```
+
+<div class="card county-title">
+  <h2>${meta.name}${meta.state ? `, ${meta.state}` : ""} <span class="county-fips-suffix">(FIPS ${fips})</span>${bridgeNote}</h2>
+</div>
+
+```js
+// IQR per (metric, year) across all counties — independent of the selected
+// county, so it lives in its own cell. Observable's reactive runtime caches
+// the cell value; switching counties no longer re-runs this 22-metric ×
+// 3-quantile × 15-year aggregation. Total work moves from
+// O(county-changes × panel-rows) to O(panel-rows).
+const metricKeys = METRICS.map(m => m.key);
+// share_remote_or_hybrid is a derived metric (share_remote + share_hybrid)
+// shown on the county profile only — not in the panel parquet. Compute
+// its IQR via SQL alongside the registry-driven IQRs.
+const iqrRows = (await db.query(`
+  SELECT year,
+    ${metricKeys.map(k => `
+      quantile_cont(${k}, 0.25) AS ${k}_p25,
+      quantile_cont(${k}, 0.50) AS ${k}_p50,
+      quantile_cont(${k}, 0.75) AS ${k}_p75
+    `).join(",\n")},
+    quantile_cont(share_remote + share_hybrid, 0.25) AS share_remote_or_hybrid_p25,
+    quantile_cont(share_remote + share_hybrid, 0.50) AS share_remote_or_hybrid_p50,
+    quantile_cont(share_remote + share_hybrid, 0.75) AS share_remote_or_hybrid_p75
+  FROM panel
+  GROUP BY year
+  ORDER BY year
+`)).toArray();
+```
+
+```js
+// Pull this county's full time series (uses dataFips so CT historic counties
+// resolve to their planning region). dataFips is validated upstream as a
+// 5-digit FIPS, so direct interpolation is safe; DuckDB-WASM lacks bound
+// parameters in this transport.
+const countyRows = (await db.query(`
+  SELECT * FROM panel WHERE county = '${dataFips}' ORDER BY year
+`)).toArray();
+
+// Derived series for share_remote_or_hybrid (NULL pre-2018 because both
+// inputs are NULL until Lightcast's structured work-mode tagging began).
+// Returned as plain {year, value} objects; we don't mutate countyRows
+// because DuckDB-WASM returns Arrow proxy rows that disallow writes.
+const shareRorHSeries = countyRows.map(r => {
+  const rem = r.share_remote, hyb = r.share_hybrid;
+  if (rem == null && hyb == null) return {year: r.year, value: null};
+  return {year: r.year, value: (Number(rem) || 0) + (Number(hyb) || 0)};
+});
+```
+
+```js
+// Build a sparkline with IQR band. Width is responsive: 3-column outer grid
+// + 2-column inner grid means 6 sparklines across. `width` here is the
+// content area width (Observable's reactive variable), already accounting
+// for the sidebar. Buffer ~140px reserved for: 3 cards × ~24px padding,
+// 2 outer grid gaps × 16px, 3 inner grid gaps × 10px, and SVG margins.
+// Slightly conservative so labels like "519,721" don't clip at the right.
+const _sparkW = Math.max(160, Math.floor((width - 140) / 6));
+
+function sparkline(metric, county, iqr, customSeries = null) {
+  const k = metric.key;
+  // customSeries lets callers supply a precomputed {year, value} array for
+  // derived metrics (e.g. share_remote_or_hybrid) that aren't columns in
+  // the panel parquet.
+  const series = customSeries ?? county.map(r => ({year: r.year, value: r[k]}));
+  const band   = iqr.map(r => ({year: r.year, p25: r[`${k}_p25`], p50: r[`${k}_p50`], p75: r[`${k}_p75`]}));
+  const last   = series[series.length - 1];
+
+  return Plot.plot({
+    width: _sparkW,
+    // Taller box + bigger top/bottom margins so y-tick labels stay inside
+    // the SVG and don't bleed up into the family-label / ⓘ row above.
+    height: 100,
+    marginTop: 16,
+    marginBottom: 24,
+    marginLeft: 50,
+    marginRight: 16,
+    x: {label: null, tickFormat: d => `'${String(d).slice(2)}`, ticks: [2010, 2015, 2020, 2024]},
+    y: {label: null, type: metric.scale === "log" ? "log" : "linear", grid: false, ticks: 3},
+    marks: [
+      Plot.areaY(band, {x: "year", y1: "p25", y2: "p75", fill: "currentColor", fillOpacity: 0.15}),
+      Plot.line(band,   {x: "year", y: "p50", stroke: "currentColor", strokeOpacity: 0.5, strokeDasharray: "2,2"}),
+      Plot.line(series, {x: "year", y: "value", stroke: "#60a5fa", strokeWidth: 2}),
+      Plot.dot(last ? [last] : [], {x: "year", y: "value", fill: "#60a5fa", r: 3.5}),
+      Plot.text(last ? [last] : [], {
+        x: "year", y: "value",
+        text: d => fmtMetric(d.value, metric),
+        dx: -6, dy: -9, textAnchor: "end",
+        fill: "#60a5fa", fontWeight: "bold", fontSize: 11,
+      }),
+    ],
+  });
+}
+
+// Group metrics for layout
+function groupMetrics() {
+  const groups = new Map();
+  for (const m of METRICS) {
+    if (!groups.has(m.family)) groups.set(m.family, []);
+    groups.get(m.family).push(m);
+  }
+  return groups;
+}
+const grouped = groupMetrics();
+```
+
+```js
+// Explicit three-column layout, one outer card per column, each containing
+// multiple metric families stacked vertically. By-employer top-K skills
+// live in their own section further down (not as sparklines).
+//
+// Left:   labor-demand context  → Volume (total + remote-or-hybrid) +
+//                                 Skill type mix (specialized + common)
+// Middle: structure              → Diversity (RCA breadth + HHI) +
+//                                 Skill space position (density + coherence)
+// Right:  complexity battery
+
+// Single shared info popover at the top of the family-card section.
+// Each metric's ⓘ button opens the popover with that metric's definition,
+// or closes it if the same button is clicked again.
+const cyInfoPopover = document.createElement("div");
+cyInfoPopover.className = "info-popover";
+cyInfoPopover.setAttribute("role", "region");
+cyInfoPopover.setAttribute("aria-label", "Metric description");
+let _activeInfoBtn = null;
+
+function showCountyInfo(metricKey, btn) {
+  const info = METRIC_INFO[metricKey];
+  if (!info) return;
+  const wasActiveSame = _activeInfoBtn === btn && cyInfoPopover.classList.contains("open");
+  if (wasActiveSame) {
+    cyInfoPopover.classList.remove("open");
+    btn.classList.remove("active");
+    btn.setAttribute("aria-expanded", "false");
+    _activeInfoBtn = null;
+    return;
+  }
+  cyInfoPopover.innerHTML =
+    '<button class="info-close" type="button" aria-label="Close">×</button>' +
+    `<b>${info.label}</b><br><span style="opacity:0.85">${info.body}</span>`;
+  cyInfoPopover.querySelector(".info-close").addEventListener("click", () => {
+    cyInfoPopover.classList.remove("open");
+    if (_activeInfoBtn) {
+      _activeInfoBtn.classList.remove("active");
+      _activeInfoBtn.setAttribute("aria-expanded", "false");
+    }
+    _activeInfoBtn = null;
+  });
+  cyInfoPopover.classList.add("open");
+  if (_activeInfoBtn && _activeInfoBtn !== btn) {
+    _activeInfoBtn.classList.remove("active");
+    _activeInfoBtn.setAttribute("aria-expanded", "false");
+  }
+  btn.classList.add("active");
+  btn.setAttribute("aria-expanded", "true");
+  _activeInfoBtn = btn;
+}
+
+function makeInfoBtn(metricKey) {
+  if (!METRIC_INFO[metricKey]) return "";
+  const btn = document.createElement("button");
+  btn.className = "info-btn";
+  btn.type = "button";
+  btn.textContent = "i";
+  const label = `About ${METRIC_INFO[metricKey].label}`;
+  btn.title = label;
+  btn.setAttribute("aria-label", label);
+  btn.setAttribute("aria-expanded", "false");
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showCountyInfo(metricKey, btn);
+  });
+  return btn;
+}
+
+function renderFamily(family, ms, opts = {}) {
+  if (!ms || ms.length === 0) return "";
+  const filtered = opts.exclude ? ms.filter(m => !opts.exclude.includes(m.key)) : ms;
+  return html`
+    <h3>${family}</h3>
+    <div class="family-block">
+      ${filtered.map(m => html`
+        <div>
+          <div class="family-label">
+            <span>${m.label}</span>${makeInfoBtn(m.key)}
+          </div>
+          ${sparkline(m, countyRows, iqrRows)}
+        </div>
+      `)}
+    </div>
+  `;
+}
+
+// Custom rendering for the Posting volume row: total_postings paired with
+// the derived share_remote_or_hybrid metric. The derived metric isn't in
+// METRICS or METRIC_INFO; it's computed in JS from share_remote + share_hybrid.
+const totalPostingsMetric = METRIC_BY_KEY.get("total_postings");
+const shareRorHMetric = {
+  key: "share_remote_or_hybrid",
+  label: "Share remote or hybrid",
+  scale: "linear",
+  round: 3,
+};
+
+function renderPostingVolumeRow() {
+  return html`
+    <h3>Posting volume</h3>
+    <div class="family-block">
+      <div>
+        <div class="family-label">
+          <span>${totalPostingsMetric.label}</span>${makeInfoBtn("total_postings")}
+        </div>
+        ${sparkline(totalPostingsMetric, countyRows, iqrRows)}
+      </div>
+      <div>
+        <div class="family-label">
+          <span>${shareRorHMetric.label}</span>
+        </div>
+        ${sparkline(shareRorHMetric, countyRows, iqrRows, shareRorHSeries)}
+      </div>
+    </div>
+  `;
+}
+
+// County-level annual totals + YoY change charts. Mirror the structure on
+// the National Profile (top row) but populated from this county's series.
+const countyTotals = countyRows.map(r => ({
+  year: r.year, total: r.total_postings ?? 0,
+}));
+
+function countyTotalsBars(data) {
+  return Plot.plot({
+    height: 200,
+    marginLeft: 60,
+    marginBottom: 36,
+    marginTop: 18,
+    x: {label: "Year", labelAnchor: "center",
+        tickFormat: d => `'${String(d).slice(2)}`,
+        ticks: [2010, 2013, 2016, 2019, 2022, 2024]},
+    y: {label: "Postings", labelAnchor: "top", tickFormat: "~s", grid: true, ticks: 5},
+    marks: [
+      Plot.barY(data, {x: "year", y: "total", fill: "#60a5fa",
+                       title: d => `${d.year}\n${Number(d.total).toLocaleString()} postings`}),
+      Plot.ruleY([0]),
+    ],
+  });
+}
+
+function countyYoyBars(data) {
+  const yoy = [];
+  for (let i = 1; i < data.length; i++) {
+    const prev = Number(data[i - 1].total);
+    const cur = Number(data[i].total);
+    if (prev > 0) yoy.push({year: data[i].year, pct: 100 * (cur - prev) / prev});
+  }
+  return Plot.plot({
+    height: 200,
+    marginLeft: 60,
+    marginBottom: 36,
+    marginTop: 18,
+    x: {label: "Year", labelAnchor: "center",
+        tickFormat: d => `'${String(d).slice(2)}`,
+        ticks: [2011, 2014, 2017, 2020, 2024]},
+    y: {label: "YoY change (%)", labelAnchor: "top", grid: true, ticks: 5,
+        tickFormat: d => `${d > 0 ? "+" : ""}${d}%`},
+    marks: [
+      Plot.barY(yoy, {x: "year", y: "pct",
+        fill: d => d.pct >= 0 ? "#60a5fa" : "#f87171",
+        title: d => `${d.year}\n${d.pct > 0 ? "+" : ""}${d.pct.toFixed(1)}%`}),
+      Plot.ruleY([0]),
+    ],
+  });
+}
+
+display(html`
+  <div class="grid grid-cols-2">
+    <div class="card card-tight">
+      <h3>Total postings per year</h3>
+      ${countyTotalsBars(countyTotals)}
+    </div>
+    <div class="card card-tight">
+      <h3>Year-over-year change</h3>
+      ${countyYoyBars(countyTotals)}
+    </div>
+  </div>
+`);
+
+// Sparkline legend — applies to every sparkline below. Three glyphs match
+// the three Plot marks: focal-county line (solid blue), national-median
+// line (dashed light grey), and inter-quartile band (translucent fill).
+display(html`
+  <div class="sparkline-legend">
+    <span class="legend-item">
+      <svg width="28" height="10" viewBox="0 0 28 10" role="img" aria-label="Solid blue line">
+        <line x1="0" y1="5" x2="28" y2="5" stroke="#60a5fa" stroke-width="2"/>
+      </svg>
+      this county
+    </span>
+    <span class="legend-item">
+      <svg width="28" height="10" viewBox="0 0 28 10" role="img" aria-label="Dashed line">
+        <line x1="0" y1="5" x2="28" y2="5" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.5" stroke-dasharray="3,2"/>
+      </svg>
+      national median
+    </span>
+    <span class="legend-item">
+      <svg width="28" height="10" viewBox="0 0 28 10" role="img" aria-label="Shaded band">
+        <rect x="0" y="2" width="28" height="6" fill="currentColor" fill-opacity="0.15"/>
+      </svg>
+      national 25th–75th percentile (IQR)
+    </span>
+  </div>
+`);
+
+display(cyInfoPopover);
+display(html`
+  <div class="grid grid-cols-3">
+    <div class="card card-tight">
+      ${renderPostingVolumeRow()}
+      ${renderFamily("Skill type mix",              grouped.get("Skill type mix"), {exclude: ["share_software"]})}
+    </div>
+    <div class="card card-tight">
+      ${renderFamily("Diversity and concentration", grouped.get("Diversity and concentration"), {exclude: ["mean_skills_per_posting", "n_distinct_skills"]})}
+      ${renderFamily("Skill space position",        grouped.get("Skill space position"), {exclude: ["avg_centrality"]})}
+    </div>
+    <div class="card card-tight">
+      ${renderFamily("Complexity and sophistication", grouped.get("Complexity and sophistication"))}
+    </div>
+  </div>
+`);
+```
+

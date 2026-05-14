@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+title: "Economic Geography of U.S. Skill Specialization and Complexity: an interactive dashboard"
+message: "If you use this dashboard, please cite both the dashboard and the underlying data release."
+type: software
+authors:
+  - family-names: Howell
+    given-names: Anthony
+    affiliation: "School of Public Affairs, Arizona State University"
+    email: ajhowel5@asu.edu
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+repository-code: "https://github.com/AntJam-Howell/skills-econ-geog-dashboard"
+url: "https://antjam-howell.github.io/skills-econ-geog-dashboard/"
+abstract: >-
+  An open-access interactive dashboard for exploring a U.S. county-year panel
+  of labor and skill demand derived from 433.6 million Lightcast (Burning
+  Glass) job postings, 2010-2024. The dashboard is built on the Observable
+  Framework and queries the released parquet panel client-side via DuckDB-WASM.
+  Five pages cover spatial visualization, ranked tables and trends, bivariate
+  county comparisons, individual county profiles, and a usage guide.
+keywords:
+  - economic geography
+  - labor demand
+  - skill demand
+  - revealed comparative advantage
+  - economic complexity
+  - relatedness
+  - Lightcast
+  - job postings
+  - dashboard
+  - Observable Framework
+license: MIT
+version: 1.0.0
+date-released: "2026-05-14"
+references:
+  - type: data
+    title: "U.S. county-year panel of labor and skill demand, 2010-2024"
+    authors:
+      - family-names: Howell
+        given-names: Anthony
+    repository-code: "https://github.com/AntJam-Howell/skills-econ-geog-data"
+    notes: "Underlying public dataset consumed by this dashboard. Zenodo DOI to be assigned."

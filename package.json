@@ -1,0 +1,29 @@
+{
+  "name": "skills-econ-geog-dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Interactive dashboard for the U.S. county-year panel of labor and skill demand (Lightcast, 2010-2024). Companion to the skills-econ-geog-data release.",
+  "license": "MIT",
+  "author": "Anthony Howell <ajhowel5@asu.edu>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AntJam-Howell/skills-econ-geog-dashboard.git"
+  },
+  "homepage": "https://antjam-howell.github.io/skills-econ-geog-dashboard/",
+  "scripts": {
+    "dev": "observable preview",
+    "build": "observable build",
+    "deploy": "observable deploy",
+    "clean": "observable clean"
+  },
+  "dependencies": {
+    "@observablehq/framework": "^1.13.0"
+  },
+  "devDependencies": {
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=20.6"
+  }
+}

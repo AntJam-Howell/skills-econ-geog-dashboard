@@ -1,0 +1,294 @@
+/* Bigger base font for readability on a wider canvas. */
+html { font-size: 16.5px; }
+
+/* Widen the navigation sidebar AND realign the main content next to it.
+ *
+ * Framework's layout.css does two things we have to defeat:
+ *   - #observablehq-sidebar width is hardcoded as `calc(272px + ...)` —
+ *     bumping --observablehq-sidebar-width alone is not enough; we set
+ *     `width` on the selector explicitly.
+ *   - #observablehq-center reserves room for the sidebar via
+ *     `--observablehq-inset-left: calc(272px + 1rem)` and applies it as
+ *     `padding-left`. That value is also hardcoded to 272px and does NOT
+ *     pick up our wider sidebar. We override the inset to match.
+ *
+ * #observablehq-center also has `margin: 2rem` by default; the right 2rem
+ * shrinks the usable content width and shows up as a visible gap on the
+ * right edge. We collapse the horizontal margin to 0 and let padding handle
+ * the gutter, so the map and other content extend close to the right edge.
+ */
+:root {
+  --observablehq-sidebar-width: 309px;
+}
+#observablehq-sidebar {
+  width: var(--observablehq-sidebar-width);
+}
+#observablehq-sidebar-toggle:checked ~ #observablehq-center,
+#observablehq-sidebar-toggle:indeterminate ~ #observablehq-center {
+  --observablehq-inset-left: calc(var(--observablehq-sidebar-width) + 1.625rem);
+  padding-left: var(--observablehq-inset-left);
+  padding-right: 1rem;
+}
+#observablehq-center {
+  margin: 1rem 0;
+}
+
+/* Headings sized to match the wider content area. */
+#observablehq-main h1 { font-size: 2.2em; line-height: 1.15; margin: 0.4em 0 0.4em; }
+#observablehq-main h2 { font-size: 1.5em; line-height: 1.2; margin-top: 1.2em; }
+#observablehq-main h3 { font-size: 1.1em; }
+
+/* Equal-height cards in 3-column rows. minmax(0, 1fr) prevents column overflow
+   when content forces a child wider than its cell; align-items: stretch makes
+   every card in a row match the tallest; flex-column on .card lets inner
+   content fill vertical space. */
+.grid-cols-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+.grid-cols-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Vertical spacing when consecutive grid rows stack on the same page. */
+.grid-cols-2 + .grid-cols-2,
+.grid-cols-3 + .grid-cols-3,
+.grid-cols-2 + .grid-cols-3,
+.grid-cols-3 + .grid-cols-2 {
+  margin-top: 1rem;
+}
+
+/* Pop-up info panel for metric definitions. */
+.info-popover {
+  display: none;
+  position: relative;
+  margin: 0.6rem 0;
+  padding: 0.85rem 1.1rem;
+  border-left: 3px solid #6ee7b7;
+  background: rgba(110, 231, 183, 0.10);
+  border-radius: 0.25rem;
+  font-size: 0.95em;
+  line-height: 1.45;
+}
+.info-popover.open { display: block; }
+.info-popover .info-close {
+  float: right;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 1.1em;
+  line-height: 1;
+  margin-left: 1rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+}
+.info-popover .info-close:hover { opacity: 1; }
+
+.info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  margin-left: 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-weight: bold;
+  font-style: italic;
+  font-family: serif;
+  opacity: 0.55;
+  vertical-align: middle;
+  padding: 0;
+  line-height: 1;
+}
+.info-btn:hover { opacity: 1; }
+.info-btn.active {
+  opacity: 1;
+  background: rgba(110, 231, 183, 0.15);
+  border-color: #6ee7b7;
+  color: #6ee7b7;
+}
+
+/* Page-intro paragraph below the H1. */
+.page-intro {
+  opacity: 0.85;
+  margin-top: -0.4em;
+}
+
+/* H1 that clips long titles cleanly. */
+.h1-clip {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Card-header row: title + info button on the same line. */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-header h3 { margin: 0; }
+
+/* Compact card variant used on the county profile family cards. */
+.card-tight { padding: 0.7rem 0.9rem; }
+.card-tight h3 { margin: 0 0 0.3rem 0; }
+
+/* County-profile header card. */
+.county-title { padding: 0.5rem 1rem; }
+.county-title h2 { margin: 0; }
+.county-fips-suffix { color: #888; font-weight: normal; font-size: 0.7em; }
+.county-bridge-note { color: #888; font-weight: normal; font-size: 0.75em; }
+
+/* County-profile metric family layout. */
+.family-block { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 12px; margin-bottom: 18px; }
+.family-block h3 { margin: 0 0 4px 0; opacity: 0.75; }
+.family-label {
+  font-size: 0.78em;
+  opacity: 0.75;
+  margin-bottom: 4px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+}
+
+/* Sparkline legend on the county profile (focal vs national median vs IQR). */
+.sparkline-legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85em;
+  opacity: 0.85;
+  margin: 0.6rem 0 0.4rem 0;
+  padding: 0.4rem 0.75rem;
+  border-left: 3px solid var(--theme-foreground-faintest, #444);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0.25rem;
+}
+.sparkline-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.sparkline-legend svg { vertical-align: middle; }
+
+/* By-employer-type help line on county profile. */
+.employer-help-line {
+  font-size: 0.8em;
+  opacity: 0.7;
+  margin: -0.2rem 0 0.4rem 0;
+}
+
+/* Heading variant that removes its default top margin (used inside cards
+   that already have their own padding). */
+h3.h3-flush { margin-top: 0; }
+
+/* Toolbar row above charts (year slider + play button, etc). */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* Map legend swatches row below the choropleth. */
+.legend-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.85em;
+  opacity: 0.85;
+  margin-top: 0.4rem;
+}
+.legend-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Suppress-toggle row beneath the legend (in its own cell). */
+.suppress-row {
+  margin-top: 0.6rem;
+  font-size: 0.9em;
+}
+
+/* Status / annotation lines above charts. */
+.muted-note { opacity: 0.7; }
+.muted-note-strong { opacity: 0.85; }
+.tiny-note { font-size: 0.85em; color: #6b7280; margin-top: 8px; }
+
+/* County profile two-tier renderers. */
+.tier-row { font-size: 12px; margin-bottom: 6px; }
+.tier-row-empty { color: #9ca3af; }
+.tier-row-shared { margin-top: 2px; }
+
+/* Featured-pair list on the scatter page. */
+.feature-list { margin: 0; padding-left: 1.4rem; }
+.feature-list li { margin-bottom: 0.7rem; }
+.feature-list .feature-blurb {
+  font-size: 0.86em;
+  opacity: 0.8;
+  margin-top: 0.15rem;
+}
+
+/* Compact stats line beneath the scatter chart. */
+.scatter-stats { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+.scatter-stats p { margin: 0; }
+
+/* Controls panel layout below the scatter. Three cards in a grid. */
+.scatter-controls { margin-top: 1rem; }
+.scatter-controls .card-tight { gap: 0.5rem; }
+.scatter-controls .ctl-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.15rem 0;
+}
+
+/* Peer-table details disclosure on the scatter page. */
+.peer-details { margin-top: 0.7rem; }
+.peer-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  opacity: 0.85;
+}
+.peer-hint { opacity: 0.6; font-weight: normal; }
+.peer-list {
+  margin: 0.6rem 0 0.2rem 1.4rem;
+  padding: 0;
+  font-size: 0.92em;
+}
+.peer-list li { margin-bottom: 0.15rem; }
+.peer-footnote {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.82em;
+  opacity: 0.65;
+}
+
+/* Mobile: collapse the sidebar so the content can use the full width. */
+@media (max-width: 800px) {
+  #observablehq-sidebar { width: 100%; }
+  #observablehq-main { margin-left: 0; }
+}

@@ -1,0 +1,21 @@
+# Observable Framework
+node_modules/
+dist/
+.observablehq/
+src/.observablehq/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Note: src/data/*.parquet IS tracked. The 15 MB county-year panel ships with
+# the dashboard so DuckDB-WASM can query it client-side. Do not gitignore it.
