@@ -4,7 +4,7 @@ toc: false
 ---
 
 <h1 class="h1-clip">Spatial visualization</h1>
-<p class="page-intro">County-level skill demand, local specialization, and complexity, built from <b>450 million+ job postings</b>, 2010 to 2024. Pick a metric and a year; hover a county for details; click any county to open it on the <b>County profiles</b> page. For ranked tables, distributions, and national labor-demand context see <b>Rankings &amp; trends</b>; for bivariate views see <b>County comparisons</b>.</p>
+<p class="page-intro">County-level skill demand, local specialization, and complexity, built from <b>433.6 million job postings</b>, 2010 to 2024. Pick a metric and a year; hover a county for details; click any county to open it on the <b>County profiles</b> page. For ranked tables, distributions, and national labor-demand context see <b>Rankings &amp; trends</b>; for bivariate views see <b>County comparisons</b>.</p>
 
 ```js
 import {DuckDBClient} from "npm:@observablehq/duckdb";
