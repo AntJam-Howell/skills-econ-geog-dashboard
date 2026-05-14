@@ -15,6 +15,8 @@ import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, fipsForData, C
 // Load static assets and the county-year panel as an Arrow Table.
 // Single GET, parsed once into a typed columnar structure; all subsequent
 // queries are in-memory array operations (no DuckDB-WASM, no range fetches).
+// All integer columns in the parquet are int32, so Arrow JS returns plain
+// JS numbers (not BigInt) for every numeric field — no coercion needed.
 const usTopo  = await FileAttachment("data/us-counties.json").json();
 const cMeta   = await FileAttachment("data/county-meta.json").json();
 const panel   = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
