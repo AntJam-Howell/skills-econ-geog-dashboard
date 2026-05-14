@@ -9,7 +9,7 @@ toc: false
 ```js
 import {DuckDBClient} from "npm:@observablehq/duckdb";
 import * as topojson from "npm:topojson-client";
-import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, TOOLTIP_EXTENSIONS, fipsForData, CT_PLANNING_REGION_NAMES, METRIC_INFO, metricSelect, SUPPRESSION_THRESHOLD, makeInfoPopover} from "./components/utils.js";
+import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, fipsForData, CT_PLANNING_REGION_NAMES, METRIC_INFO, metricSelect, SUPPRESSION_THRESHOLD, makeInfoPopover} from "./components/utils.js";
 ```
 
 ```js
@@ -108,9 +108,7 @@ const showSuppressed = Generators.input(showSuppressedEl);
 
 ```js
 // Pull the selected metric for the selected year. DuckDB-WASM in the
-// browser; query is fast (47k rows, indexed scan). When the chosen metric
-// has a TOOLTIP_EXTENSIONS entry, also pull the monopoly top-5 column for
-// the hover tooltip.
+// browser; query is fast (47k rows, indexed scan).
 //
 // SQL safety: `metric.key` is constrained to the keys defined in METRICS;
 // `year` is bounded by the Inputs.range slider. Neither value can be
@@ -120,7 +118,6 @@ const showSuppressed = Generators.input(showSuppressedEl);
 // 1000 for network/concentration metrics). When set, low-volume counties get
 // clamped to the color-scale floor at fill time so the map stays visually
 // contiguous and reads as "no signal" rather than a missing-data gap.
-const tooltipExt = TOOLTIP_EXTENSIONS[metric.key];
 const suppressBelow = metric.suppressBelow ?? 0;
 const hasSuppression = suppressBelow > 0;
 
@@ -128,18 +125,15 @@ const rows = await db.query(`
   SELECT county,
          ${metric.key} AS value,
          total_postings AS n_postings
-         ${tooltipExt ? `, ${tooltipExt} AS topk` : ""}
   FROM panel
   WHERE year = ${year}
 `);
 
 const valueByFips = new Map();
 const postingsByFips = new Map();
-const topkByFips = tooltipExt ? new Map() : null;
 for (const r of rows.toArray()) {
   valueByFips.set(r.county, r.value);
   postingsByFips.set(r.county, Number(r.n_postings));
-  if (topkByFips) topkByFips.set(r.county, r.topk);
 }
 ```
 
@@ -287,10 +281,6 @@ function buildTitle(d) {
     if (hasSuppression && n != null && n < suppressBelow) {
       txt += ` (low volume: ${n.toLocaleString()} postings — value suppressed on map)`;
     }
-  }
-  if (topkByFips) {
-    const topk = topkByFips.get(dataFips);
-    if (topk) txt += `\nTop: ${topk}`;
   }
   return txt;
 }

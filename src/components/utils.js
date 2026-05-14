@@ -5,8 +5,6 @@
 // Metric registry
 // Single source of truth for: which variables are user-facing, how to label
 // them, and how to color/scale them on the map and in scatter plots.
-// Add new metrics here. Phase 2 will add the top-K skill drilldown columns
-// (e.g., eci_top5_skills) but those are tooltip strings, not map metrics.
 // ─────────────────────────────────────────────────────────────────────────
 
 // Family order matters: it determines the order families appear in the
@@ -330,26 +328,3 @@ export function metricGroups() {
   return groups;
 }
 
-// Top-5 skill drilldown columns from the v3.1 panel. Some keys are metric
-// keys (resolved against METRICS via METRIC_BY_KEY); others (rarest, *_shared)
-// are freestanding labels that the rendering logic uses on its own. The two-
-// tier columns (eci_shared / fitness_shared / rarest_shared) require
-// ubiquity_filtered >= 2 and surface different skills only for mega-portfolio
-// counties — for ~all counties they coincide with the monopoly tier.
-export const TOOLTIP_EXTENSIONS = {
-  eci:                "eci_top5_skills",
-  eci_shared:         "eci_top5_shared",
-  fitness:            "fitness_top5_skills",
-  fitness_shared:     "fitness_top5_shared",
-  n_rca_skills:       "rca_top5_skills",
-  rarest:             "rarest_5_rca_skills",
-  rarest_shared:      "rarest_5_rca_shared",
-  share_specialized:  "specialized_top5_skills",
-  share_software:     "software_top5_skills",
-  share_common:       "common_top5_skills",
-  corp_n_rca_skills:  "corp_top5_skills",
-  univ_n_rca_skills:  "univ_top5_skills",
-  fede_n_rca_skills:  "fede_top5_skills",
-  gove_n_rca_skills:  "gove_top5_skills",
-  staf_n_rca_skills:  "staf_top5_skills",
-};
