@@ -34,7 +34,9 @@ See the **How to use the dashboard** page for variable definitions.
 
 ## Data source
 
-The dashboard reads a single 5.6 MB parquet file at `src/data/county_year_panel_export.parquet`. It is a 39-column county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,891 county-year observations. The variable set mirrors the public release: county-year scalars only, no per-skill columns.
+The dashboard reads a single 7.6 MB **Arrow IPC** file at `src/data/county_year_panel_export.arrow` (LZ4-compressed). It is a 39-column county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,891 county-year observations. The variable set mirrors the public release: county-year scalars only, no per-skill columns.
+
+The dashboard ships the Arrow IPC file (not parquet) because Observable Framework parses Arrow IPC natively via pure-JS `apache-arrow`, eliminating the ~2 MB `parquet-wasm` WebAssembly module that parquet readers require in the browser. The **canonical scientific artifact remains parquet** and lives in the companion data repository — see [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) for the parquet download, codebook, and reproducible pipeline.
 
 The pipeline that produces the parquet, the codebook, and the full methodological documentation live in the companion repository **[skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)**. The dashboard is intentionally read-only on the data; it does not transform the panel beyond on-the-fly aggregation for display.
 
@@ -64,7 +66,7 @@ skills-econ-geog-dashboard/
     │   ├── utils.js                 # METRICS registry, METRIC_INFO, helpers
     │   └── countySelector.js        # county dropdown with text-filter + browse
     └── data/
-        ├── county_year_panel_export.parquet   # 5.6 MB, 47,891 x 39
+        ├── county_year_panel_export.arrow     # 7.6 MB, Arrow IPC LZ4, 47,891 x 39
         ├── data_dictionary.csv                # variable metadata (reference)
         ├── rucc_2023.csv                      # USDA Rural-Urban Continuum Codes
         ├── us-counties.json                   # static TopoJSON (us-atlas v3.0.1, 10m)

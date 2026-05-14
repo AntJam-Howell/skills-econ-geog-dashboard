@@ -14,7 +14,7 @@ import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, METRIC_INFO, metricSelect, m
 // Load county metadata and the county-year panel as an in-memory array.
 // Single GET per file; all queries below are array operations on `panel`.
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
+const panel = (await FileAttachment("data/county_year_panel_export.arrow").arrow()).toArray();
 ```
 
 ```js

@@ -17,7 +17,7 @@ import {countySelector} from "./components/countySelector.js";
 // Single GET per file. iqrRows and countyRows below are derived from
 // `panel` via JS array operations (no DuckDB-WASM).
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
+const panel = (await FileAttachment("data/county_year_panel_export.arrow").arrow()).toArray();
 ```
 
 ```js
