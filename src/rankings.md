@@ -7,15 +7,14 @@ toc: false
 <p class="page-intro">County-level rankings and distributions for any indicator, plus national labor-demand context. Pick a metric and a year; the table and histogram below respond. The four aggregate charts at the bottom are panel-wide totals and do not depend on the selector.</p>
 
 ```js
-import {DuckDBClient} from "npm:@observablehq/duckdb";
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, METRIC_INFO, metricSelect, makeInfoPopover} from "./components/utils.js";
 ```
 
 ```js
+// Load county metadata and the county-year panel as an in-memory array.
+// Single GET per file; all queries below are array operations on `panel`.
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const db = await DuckDBClient.of({
-  panel: FileAttachment("data/county_year_panel_export.parquet")
-});
+const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
 ```
 
 ```js
@@ -56,13 +55,11 @@ const year = view(Inputs.range([2010, 2024], {label: "Year", step: 1, value: 202
 const suppressBelow = metric.suppressBelow ?? 0;
 const hasSuppression = suppressBelow > 0;
 
-const rows = await db.query(`
-  SELECT county,
-         ${metric.key} AS value,
-         total_postings AS n_postings
-  FROM panel
-  WHERE year = ${year}
-`);
+// All counties in the selected year, projected to the columns the
+// histogram below uses. Used by the rectY/binX mark further down.
+const rows = panel
+  .filter(r => r.year === year)
+  .map(r => ({county: r.county, value: r[metric.key], n_postings: r.total_postings}));
 ```
 
 ```js
@@ -73,20 +70,21 @@ const direction = view(Inputs.radio(["highest", "lowest"], {
 ```
 
 ```js
-const topN = await db.query(`
-  SELECT county, ${metric.key} AS value, total_postings
-  FROM panel
-  WHERE year = ${year} AND ${metric.key} IS NOT NULL
-  ${hasSuppression ? `AND total_postings >= ${suppressBelow}` : ""}
-  ORDER BY ${metric.key} ${direction === "highest" ? "DESC" : "ASC"}
-  LIMIT 25
-`);
-
-const topRows = topN.toArray().map(r => ({
+// Top-25 highest or lowest counties for this (metric, year), respecting
+// the per-metric suppression threshold.
+const _filtered = panel.filter(r =>
+  r.year === year &&
+  r[metric.key] != null &&
+  (!hasSuppression || r.total_postings >= suppressBelow)
+);
+const _cmp = direction === "highest"
+  ? (a, b) => b[metric.key] - a[metric.key]
+  : (a, b) => a[metric.key] - b[metric.key];
+const topRows = _filtered.sort(_cmp).slice(0, 25).map(r => ({
   fips: r.county,
   name: cMeta[r.county]?.name ?? "",
   state: cMeta[r.county]?.state ?? "",
-  value: r.value,
+  value: r[metric.key],
   postings: r.total_postings,
 }));
 ```
@@ -115,12 +113,12 @@ const topRows = topN.toArray().map(r => ({
   <div class="card">
     <h2>Distribution across counties, ${year}</h2>
     ${(() => {
-      const filtered = rows.toArray().filter(r =>
-        !hasSuppression || (Number(r.n_postings) ?? 0) >= suppressBelow
+      const filtered = rows.filter(r =>
+        !hasSuppression || (r.n_postings ?? 0) >= suppressBelow
       );
       let binOpts = {x: "value", thresholds: 30, fill: "#0ea5e9", fillOpacity: 0.85};
       if (metric.scale === "log") {
-        const vals = filtered.map(r => Number(r.value)).filter(v => v > 0);
+        const vals = filtered.map(r => r.value).filter(v => v > 0);
         if (vals.length > 0) {
           const lmin = Math.log10(Math.min(...vals));
           const lmax = Math.log10(Math.max(...vals));
@@ -165,10 +163,12 @@ These four charts summarize the whole panel; they don't respond to the metric or
 // slider — these summarize the whole panel and run once on page load.
 // ─────────────────────────────────────────────────────────────────────────
 
-const overviewTotals = (await db.query(`
-  SELECT year, SUM(total_postings) AS total
-  FROM panel GROUP BY year ORDER BY year
-`)).toArray().map(r => ({year: Number(r.year), total: Number(r.total)}));
+// National aggregate rollups via d3.rollup over the in-memory panel.
+// 47k rows × 5 reducers ≈ a few ms. Runs once per page load.
+const overviewTotals = Array.from(
+  d3.rollup(panel, v => d3.sum(v, r => r.total_postings), r => r.year),
+  ([year, total]) => ({year, total})
+).sort((a, b) => a.year - b.year);
 
 // Reassignment rule: NAICS 9999 (unclassified) postings get rolled into
 // Private sector. University (6113-6117), Federal lab (5417, 9271), and
@@ -176,43 +176,51 @@ const overviewTotals = (await db.query(`
 // posting is almost certainly a private-sector employer Lightcast couldn't
 // tag. Staffing firms (NAICS 5613 + company_is_staffing) are excluded
 // because they over-represent counties with single big agencies.
-const overviewByEmployer = (await db.query(`
-  SELECT year,
-    SUM(n_corporate + n_unclassified) AS "Private sector",
-    SUM(n_university)                 AS University,
-    SUM(n_federal_lab)                AS "Federal lab",
-    SUM(n_government)                 AS Government
-  FROM panel GROUP BY year ORDER BY year
-`)).toArray();
+const overviewByEmployer = Array.from(
+  d3.rollup(panel, v => ({
+    "Private sector": d3.sum(v, r => (r.n_corporate ?? 0) + (r.n_unclassified ?? 0)),
+    "University":     d3.sum(v, r => r.n_university),
+    "Federal lab":    d3.sum(v, r => r.n_federal_lab),
+    "Government":     d3.sum(v, r => r.n_government),
+  }), r => r.year),
+  ([year, sums]) => ({year, ...sums})
+).sort((a, b) => a.year - b.year);
 
-const overviewByUrbanicity = (await db.query(`
-  SELECT year,
-    SUM(CASE WHEN rucc_tier = 'large_metro'       THEN total_postings ELSE 0 END) AS "Large metro",
-    SUM(CASE WHEN rucc_tier = 'small_metro'       THEN total_postings ELSE 0 END) AS "Small metro",
-    SUM(CASE WHEN rucc_tier = 'nonmetro_adjacent' THEN total_postings ELSE 0 END) AS "Nonmetro adjacent",
-    SUM(CASE WHEN rucc_tier = 'rural'             THEN total_postings ELSE 0 END) AS "Rural"
-  FROM panel
-  WHERE rucc_tier IS NOT NULL
-  GROUP BY year ORDER BY year
-`)).toArray();
+const overviewByUrbanicity = Array.from(
+  d3.rollup(
+    panel.filter(r => r.rucc_tier != null),
+    v => ({
+      "Large metro":       d3.sum(v.filter(r => r.rucc_tier === "large_metro"),       r => r.total_postings),
+      "Small metro":       d3.sum(v.filter(r => r.rucc_tier === "small_metro"),       r => r.total_postings),
+      "Nonmetro adjacent": d3.sum(v.filter(r => r.rucc_tier === "nonmetro_adjacent"), r => r.total_postings),
+      "Rural":             d3.sum(v.filter(r => r.rucc_tier === "rural"),             r => r.total_postings),
+    }),
+    r => r.year
+  ),
+  ([year, sums]) => ({year, ...sums})
+).sort((a, b) => a.year - b.year);
 
 // Coverage stats for the popovers: how many postings are in unassigned-FIPS
 // (XX999, no county) and in staffing firms — both excluded from their
 // respective breakdowns. Reported for 2010 (start) and 2024 (end of panel).
-const coverageStats = (await db.query(`
-  SELECT year,
-    SUM(CASE WHEN county LIKE '%999' THEN total_postings ELSE 0 END) AS unassigned_n,
-    SUM(n_staffing) AS staffing_n,
-    SUM(total_postings) AS total_n
-  FROM panel WHERE year IN (2010, 2024)
-  GROUP BY year ORDER BY year
-`)).toArray();
-const cov = Object.fromEntries(coverageStats.map(r => [Number(r.year), {
-  unassigned: Number(r.unassigned_n),
-  staffing: Number(r.staffing_n),
-  total: Number(r.total_n),
-  unassignedPct: 100 * Number(r.unassigned_n) / Math.max(1, Number(r.total_n)),
-  staffingPct: 100 * Number(r.staffing_n) / Math.max(1, Number(r.total_n)),
+const coverageStats = Array.from(
+  d3.rollup(
+    panel.filter(r => r.year === 2010 || r.year === 2024),
+    v => ({
+      unassigned_n: d3.sum(v.filter(r => r.county.endsWith("999")), r => r.total_postings),
+      staffing_n:   d3.sum(v, r => r.n_staffing),
+      total_n:      d3.sum(v, r => r.total_postings),
+    }),
+    r => r.year
+  ),
+  ([year, sums]) => ({year, ...sums})
+).sort((a, b) => a.year - b.year);
+const cov = Object.fromEntries(coverageStats.map(r => [r.year, {
+  unassigned: r.unassigned_n,
+  staffing: r.staffing_n,
+  total: r.total_n,
+  unassignedPct: 100 * r.unassigned_n / Math.max(1, r.total_n),
+  staffingPct: 100 * r.staffing_n / Math.max(1, r.total_n),
 }]));
 const fmtPct = v => v.toFixed(1) + "%";
 const fmtN = v => v.toLocaleString();

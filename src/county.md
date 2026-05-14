@@ -8,16 +8,16 @@ toc: false
 Pick a county from the search box, click a county on the **Spatial visualization** page, or jump in from **County comparisons**. Each sparkline shows the county's 2010–2024 trajectory against the national distribution. The legend below the controls explains the line styles and shaded band.
 
 ```js
-import {DuckDBClient} from "npm:@observablehq/duckdb";
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, fipsForData, CT_PLANNING_REGION_NAMES, CT_BRIDGE, METRIC_INFO} from "./components/utils.js";
 import {countySelector} from "./components/countySelector.js";
 ```
 
 ```js
+// Load county metadata and the county-year panel as an in-memory array.
+// Single GET per file. iqrRows and countyRows below are derived from
+// `panel` via JS array operations (no DuckDB-WASM).
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const db = await DuckDBClient.of({
-  panel: FileAttachment("data/county_year_panel_export.parquet")
-});
+const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
 ```
 
 ```js
@@ -51,46 +51,57 @@ const bridgeNote = isBridged
 ```js
 // IQR per (metric, year) across all counties — independent of the selected
 // county, so it lives in its own cell. Observable's reactive runtime caches
-// the cell value; switching counties no longer re-runs this 22-metric ×
-// 3-quantile × 15-year aggregation. Total work moves from
-// O(county-changes × panel-rows) to O(panel-rows).
+// the cell value; switching counties does not re-run this aggregation.
+// Implementation: group panel by year, then for each metric column compute
+// p25/p50/p75 via d3.quantileSorted on the sorted non-null values for that
+// (year, metric). share_remote_or_hybrid is a derived series not in the
+// parquet, so we compute it row-wise before sorting.
 const metricKeys = METRICS.map(m => m.key);
-// share_remote_or_hybrid is a derived metric (share_remote + share_hybrid)
-// shown on the county profile only — not in the panel parquet. Compute
-// its IQR via SQL alongside the registry-driven IQRs.
-const iqrRows = (await db.query(`
-  SELECT year,
-    ${metricKeys.map(k => `
-      quantile_cont(${k}, 0.25) AS ${k}_p25,
-      quantile_cont(${k}, 0.50) AS ${k}_p50,
-      quantile_cont(${k}, 0.75) AS ${k}_p75
-    `).join(",\n")},
-    quantile_cont(share_remote + share_hybrid, 0.25) AS share_remote_or_hybrid_p25,
-    quantile_cont(share_remote + share_hybrid, 0.50) AS share_remote_or_hybrid_p50,
-    quantile_cont(share_remote + share_hybrid, 0.75) AS share_remote_or_hybrid_p75
-  FROM panel
-  GROUP BY year
-  ORDER BY year
-`)).toArray();
+
+function quantilesOf(vals) {
+  if (!vals.length) return {p25: null, p50: null, p75: null};
+  vals.sort((a, b) => a - b);
+  return {
+    p25: d3.quantileSorted(vals, 0.25),
+    p50: d3.quantileSorted(vals, 0.50),
+    p75: d3.quantileSorted(vals, 0.75),
+  };
+}
+
+const iqrRows = Array.from(
+  d3.rollup(panel, v => {
+    const out = {};
+    for (const k of metricKeys) {
+      const vals = v.map(r => r[k]).filter(x => x != null);
+      const {p25, p50, p75} = quantilesOf(vals);
+      out[`${k}_p25`] = p25; out[`${k}_p50`] = p50; out[`${k}_p75`] = p75;
+    }
+    const rorh = v
+      .filter(r => r.share_remote != null || r.share_hybrid != null)
+      .map(r => (r.share_remote ?? 0) + (r.share_hybrid ?? 0));
+    const q = quantilesOf(rorh);
+    out.share_remote_or_hybrid_p25 = q.p25;
+    out.share_remote_or_hybrid_p50 = q.p50;
+    out.share_remote_or_hybrid_p75 = q.p75;
+    return out;
+  }, r => r.year),
+  ([year, qs]) => ({year, ...qs})
+).sort((a, b) => a.year - b.year);
 ```
 
 ```js
 // Pull this county's full time series (uses dataFips so CT historic counties
-// resolve to their planning region). dataFips is validated upstream as a
-// 5-digit FIPS, so direct interpolation is safe; DuckDB-WASM lacks bound
-// parameters in this transport.
-const countyRows = (await db.query(`
-  SELECT * FROM panel WHERE county = '${dataFips}' ORDER BY year
-`)).toArray();
+// resolve to their planning region).
+const countyRows = panel
+  .filter(r => r.county === dataFips)
+  .sort((a, b) => a.year - b.year);
 
 // Derived series for share_remote_or_hybrid (NULL pre-2018 because both
 // inputs are NULL until Lightcast's structured work-mode tagging began).
-// Returned as plain {year, value} objects; we don't mutate countyRows
-// because DuckDB-WASM returns Arrow proxy rows that disallow writes.
 const shareRorHSeries = countyRows.map(r => {
   const rem = r.share_remote, hyb = r.share_hybrid;
   if (rem == null && hyb == null) return {year: r.year, value: null};
-  return {year: r.year, value: (Number(rem) || 0) + (Number(hyb) || 0)};
+  return {year: r.year, value: (rem ?? 0) + (hyb ?? 0)};
 });
 ```
 

@@ -8,16 +8,15 @@ toc: false
 Pick any two metrics, a year, and optionally a focal county. Each dot is a county, sized by total postings. Hover for county name and values; click to open that county on the **County profiles** page. Highlight a focal county to see where it sits in the cloud, then toggle "Show similar counties" to surface its k nearest peers in this 2D space — useful both for bivariate analysis and for finding economic peers across the volume, composition, diversity, network, and complexity families.
 
 ```js
-import {DuckDBClient} from "npm:@observablehq/duckdb";
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricSelect, makeInfoPopover} from "./components/utils.js";
 import {countySelector} from "./components/countySelector.js";
 ```
 
 ```js
+// Load county metadata and the county-year panel as an in-memory array.
+// Single GET per file; the scatter query below is an array filter + map.
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const db = await DuckDBClient.of({
-  panel: FileAttachment("data/county_year_panel_export.parquet")
-});
+const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
 ```
 
 ```js
@@ -161,70 +160,54 @@ display(html`
 
 ```js
 // Year-by-year 1%/99% winsorization for metrics flagged with `winsorize: true`
-// in METRICS (currently n_distinct_skills and share_specialized).
-// Computes p1/p99 within the selected year only and clips any extreme
-// values into that range. If neither axis is winsorized, the simpler
-// query runs without the bounds CTE.
+// in METRICS (currently n_distinct_skills and share_specialized). Compute
+// p1/p99 from non-null county-level values in the selected year, then clip
+// extreme values into that range. Skip the bounds computation when neither
+// axis is winsorized.
 //
-// SQL safety: xMetric.key / yMetric.key come from METRICS (whitelisted);
-// year / minPostings are bounded by Inputs.range; stateFilter is post-load.
-// All interpolated values are non-textual and not user-supplied as strings.
-const wx = xMetric.winsorize === true;
-const wy = yMetric.winsorize === true;
-const needsWinsor = wx || wy;
-
 // Exclude state-level placeholder FIPS (XX999, used by Lightcast for
 // postings whose specific county couldn't be identified). 51 such codes
 // — one per state + DC + territories — and they cluster around major
 // state aggregates that distort the scatter (e.g., 12999 in FL with
 // 36k postings appearing as a "phantom" county). Real county FIPS never
 // end in 999 since the Census reserves that suffix for "unknown".
-const sql = needsWinsor ? `
-  WITH b AS (
-    SELECT
-      quantile_cont(${xMetric.key}, 0.01) AS x_lo,
-      quantile_cont(${xMetric.key}, 0.99) AS x_hi,
-      quantile_cont(${yMetric.key}, 0.01) AS y_lo,
-      quantile_cont(${yMetric.key}, 0.99) AS y_hi
-    FROM panel
-    WHERE year = ${year}
-      AND ${xMetric.key} IS NOT NULL
-      AND ${yMetric.key} IS NOT NULL
-      AND county NOT LIKE '%999'
-  )
-  SELECT p.county,
-    ${wx ? `GREATEST(LEAST(p.${xMetric.key}, b.x_hi), b.x_lo)` : `p.${xMetric.key}`} AS x,
-    ${wy ? `GREATEST(LEAST(p.${yMetric.key}, b.y_hi), b.y_lo)` : `p.${yMetric.key}`} AS y,
-    p.total_postings AS n
-  FROM panel p CROSS JOIN b
-  WHERE p.year = ${year}
-    AND p.${xMetric.key} IS NOT NULL
-    AND p.${yMetric.key} IS NOT NULL
-    AND p.total_postings >= ${minPostings}
-    AND p.county NOT LIKE '%999'
-` : `
-  SELECT county,
-         ${xMetric.key} AS x,
-         ${yMetric.key} AS y,
-         total_postings AS n
-  FROM panel
-  WHERE year = ${year}
-    AND ${xMetric.key} IS NOT NULL
-    AND ${yMetric.key} IS NOT NULL
-    AND total_postings >= ${minPostings}
-    AND county NOT LIKE '%999'
-`;
+const wx = xMetric.winsorize === true;
+const wy = yMetric.winsorize === true;
 
-const rawRows = await db.query(sql);
+// Year-restricted set with both axes non-null and state-level FIPS dropped.
+// Bounds for winsorization come from this set; the displayed point set
+// further filters on minPostings.
+const _yearRows = panel.filter(r =>
+  r.year === year &&
+  r[xMetric.key] != null &&
+  r[yMetric.key] != null &&
+  !r.county.endsWith("999")
+);
 
-const allPoints = rawRows.toArray().map(r => ({
-  fips: r.county,
-  name: cMeta[r.county]?.name ?? "",
-  state: cMeta[r.county]?.state ?? "",
-  x: r.x,
-  y: r.y,
-  n: Number(r.n),
-}));
+let xLo = -Infinity, xHi = Infinity, yLo = -Infinity, yHi = Infinity;
+if (wx) {
+  const xv = _yearRows.map(r => r[xMetric.key]).sort((a, b) => a - b);
+  xLo = d3.quantileSorted(xv, 0.01);
+  xHi = d3.quantileSorted(xv, 0.99);
+}
+if (wy) {
+  const yv = _yearRows.map(r => r[yMetric.key]).sort((a, b) => a - b);
+  yLo = d3.quantileSorted(yv, 0.01);
+  yHi = d3.quantileSorted(yv, 0.99);
+}
+
+const _clamp = (v, lo, hi) => Math.max(Math.min(v, hi), lo);
+
+const allPoints = _yearRows
+  .filter(r => r.total_postings >= minPostings)
+  .map(r => ({
+    fips: r.county,
+    name: cMeta[r.county]?.name ?? "",
+    state: cMeta[r.county]?.state ?? "",
+    x: wx ? _clamp(r[xMetric.key], xLo, xHi) : r[xMetric.key],
+    y: wy ? _clamp(r[yMetric.key], yLo, yHi) : r[yMetric.key],
+    n: r.total_postings,
+  }));
 
 // Apply the state filter post-load. We pull the full national set from
 // SQL so the user can pivot between states without re-querying.
