@@ -7,21 +7,17 @@ toc: false
 <p class="page-intro">County-level skill demand, local specialization, and complexity, built from <b>433.6 million job postings</b>, 2010 to 2024. Pick a metric and a year; hover a county for details; click any county to open it on the <b>County profiles</b> page. For ranked tables, distributions, and national labor-demand context see <b>Rankings &amp; trends</b>; for bivariate views see <b>County comparisons</b>.</p>
 
 ```js
-import {DuckDBClient} from "npm:@observablehq/duckdb";
 import * as topojson from "npm:topojson-client";
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, fipsForData, CT_PLANNING_REGION_NAMES, METRIC_INFO, metricSelect, SUPPRESSION_THRESHOLD, makeInfoPopover} from "./components/utils.js";
 ```
 
 ```js
-// Load static assets
+// Load static assets and the county-year panel as an Arrow Table.
+// Single GET, parsed once into a typed columnar structure; all subsequent
+// queries are in-memory array operations (no DuckDB-WASM, no range fetches).
 const usTopo  = await FileAttachment("data/us-counties.json").json();
 const cMeta   = await FileAttachment("data/county-meta.json").json();
-
-// Single shared DuckDB client over the parquet panel; both the map and the
-// National Labor Demand aggregate charts query through this connection.
-const db = await DuckDBClient.of({
-  panel: FileAttachment("data/county_year_panel_export.parquet")
-});
+const panel   = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
 
 const counties = topojson.feature(usTopo, usTopo.objects.counties);
 const states   = topojson.mesh(usTopo, usTopo.objects.states, (a, b) => a !== b);
@@ -107,12 +103,7 @@ const showSuppressed = Generators.input(showSuppressedEl);
 ```
 
 ```js
-// Pull the selected metric for the selected year. DuckDB-WASM in the
-// browser; query is fast (47k rows, indexed scan).
-//
-// SQL safety: `metric.key` is constrained to the keys defined in METRICS;
-// `year` is bounded by the Inputs.range slider. Neither value can be
-// user-supplied text, so direct interpolation is safe in this context.
+// Pull the selected metric for the selected year from the in-memory panel.
 //
 // metric.suppressBelow gives a per-metric posting threshold (500 for shares,
 // 1000 for network/concentration metrics). When set, low-volume counties get
@@ -121,19 +112,13 @@ const showSuppressed = Generators.input(showSuppressedEl);
 const suppressBelow = metric.suppressBelow ?? 0;
 const hasSuppression = suppressBelow > 0;
 
-const rows = await db.query(`
-  SELECT county,
-         ${metric.key} AS value,
-         total_postings AS n_postings
-  FROM panel
-  WHERE year = ${year}
-`);
-
 const valueByFips = new Map();
 const postingsByFips = new Map();
-for (const r of rows.toArray()) {
-  valueByFips.set(r.county, r.value);
-  postingsByFips.set(r.county, Number(r.n_postings));
+const yr = Number(year);
+for (const r of panel) {
+  if (r.year !== yr) continue;
+  valueByFips.set(r.county, r[metric.key]);
+  postingsByFips.set(r.county, Number(r.total_postings));
 }
 ```
 
@@ -145,18 +130,21 @@ for (const r of rows.toArray()) {
 // (avoids outlier pull); data_min/data_max used by log scales because log
 // already compresses outliers and we want the gradient and tick labels to
 // span the full visible range.
-const domainRows = await db.query(`
-  SELECT
-    quantile_cont(${metric.key}, 0.05) AS lo,
-    quantile_cont(${metric.key}, 0.95) AS hi,
-    quantile_cont(${metric.key}, 0.50) AS mid,
-    min(${metric.key}) AS data_min,
-    max(${metric.key}) AS data_max
-  FROM panel
-  WHERE ${metric.key} IS NOT NULL
-  ${hasSuppression ? `AND total_postings >= ${suppressBelow}` : ""}
-`);
-const dom = domainRows.toArray()[0];
+const _domainVals = [];
+for (const r of panel) {
+  const v = r[metric.key];
+  if (v == null) continue;
+  if (hasSuppression && Number(r.total_postings) < suppressBelow) continue;
+  _domainVals.push(Number(v));
+}
+_domainVals.sort((a, b) => a - b);
+const dom = {
+  lo:        d3.quantileSorted(_domainVals, 0.05),
+  mid:       d3.quantileSorted(_domainVals, 0.50),
+  hi:        d3.quantileSorted(_domainVals, 0.95),
+  data_min:  _domainVals[0],
+  data_max:  _domainVals[_domainVals.length - 1],
+};
 ```
 
 ```js
