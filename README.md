@@ -34,9 +34,9 @@ See the **How to use the dashboard** page for variable definitions.
 
 ## Data source
 
-The dashboard reads a single 8.4 MB **Arrow IPC** file at `src/data/county_year_panel_export.arrow` (uncompressed, float32 metrics). It is a 39-column county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,891 county-year observations. The variable set mirrors the public release: county-year scalars only, no per-skill columns.
+The dashboard reads a single 4.0 MB **parquet** file at `src/data/county_year_panel_export.parquet` (zstd-3, float32 metrics, int32 counts). It is a 39-column county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,891 county-year observations. The variable set mirrors the public release: county-year scalars only, no per-skill columns.
 
-The dashboard ships uncompressed Arrow IPC (not compressed parquet) because Observable Framework parses Arrow IPC natively via pure-JS `apache-arrow`, eliminating the ~2 MB `parquet-wasm` WebAssembly module that parquet readers require in the browser. Apache Arrow JS does not ship LZ4 or ZSTD codecs by default, so the dashboard file is written uncompressed for universal browser compatibility; the float metric columns are cast to `float32` (7+ significant digits, more than enough for visualization) to keep the file size manageable. The **canonical scientific artifact remains float64 parquet** and lives in the companion data repository — see [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) for the parquet download, codebook, and reproducible pipeline.
+Observable Framework parses the parquet via `parquet-wasm` (a small WebAssembly module bundled into the page automatically) and returns an Apache Arrow Table that the page consumes with vanilla JS array operations. The numeric metric columns are cast to `float32` (7+ significant digits, more than enough for any dashboard visualization), and integer columns are stored as `int32`, to keep the file size compact without sacrificing usable precision. The **canonical scientific artifact uses float64** and lives in the companion data repository — see [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) for the float64 parquet download, codebook, and reproducible pipeline.
 
 The pipeline that produces the parquet, the codebook, and the full methodological documentation live in the companion repository **[skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)**. The dashboard is intentionally read-only on the data; it does not transform the panel beyond on-the-fly aggregation for display.
 
@@ -66,7 +66,7 @@ skills-econ-geog-dashboard/
     │   ├── utils.js                 # METRICS registry, METRIC_INFO, helpers
     │   └── countySelector.js        # county dropdown with text-filter + browse
     └── data/
-        ├── county_year_panel_export.arrow     # 8.4 MB, Arrow IPC uncompressed, 47,891 x 39
+        ├── county_year_panel_export.parquet   # 4.0 MB, parquet zstd-3, 47,891 x 39
         ├── data_dictionary.csv                # variable metadata (reference)
         ├── rucc_2023.csv                      # USDA Rural-Urban Continuum Codes
         ├── us-counties.json                   # static TopoJSON (us-atlas v3.0.1, 10m)

@@ -16,7 +16,7 @@ import {countySelector} from "./components/countySelector.js";
 // Load county metadata and the county-year panel as an in-memory array.
 // Single GET per file; the scatter query below is an array filter + map.
 const cMeta = await FileAttachment("data/county-meta.json").json();
-const panel = (await FileAttachment("data/county_year_panel_export.arrow").arrow()).toArray();
+const panel = (await FileAttachment("data/county_year_panel_export.parquet").parquet()).toArray();
 ```
 
 ```js
