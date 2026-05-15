@@ -36,9 +36,7 @@ See the **How to use the dashboard** page for variable definitions.
 
 The dashboard visualizes a county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,126 county-year observations.
 
-The pipeline that produces the panel, the codebook, and the full methodological documentation live in the companion repository **[skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)**. The canonical scientific artifact at full float64 precision is also released there.
-
-The Connecticut planning-region remap (historic 8 counties to the new 9 planning regions, effective June 2022) is applied throughout.
+The pipeline that produces the panel, the codebook, and the full methodological documentation live in the companion repository **[skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)**.
 
 ---
 
