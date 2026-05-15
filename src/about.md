@@ -127,16 +127,9 @@ The "Show suppressed counties" toggle on the map lets you see the underlying val
 
 ### County urbanicity classification (USDA RUCC 2023)
 
-The "Postings by metro tier" panel and the `rucc_tier` column come from the **USDA Economic Research Service Rural-Urban Continuum Codes 2023**, the canonical source for U.S. county urbanicity classification. Source: <https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/>. RUCC distinguishes nine categories of metropolitan and nonmetropolitan counties based on population size and adjacency to a metro area.
+The "Postings by metro tier" panel and the `rucc_tier` column come from the **USDA Economic Research Service Rural-Urban Continuum Codes 2023**, the canonical source for U.S. county urbanicity classification. The dashboard collapses the 9-code RUCC into a 4-tier scheme.
 
-The dashboard collapses the 9-code RUCC into a 4-tier scheme that is more legible at a glance and still preserves the analytically meaningful distinctions:
-
-| Tier | RUCC codes | Counties (n) | Description |
-|---|---|---|---|
-| **Large metro** | 1 | ~480 | Counties in metro areas of 1 million population or more |
-| **Small metro** | 2, 3 | ~770 | Counties in metro areas under 1 million |
-| **Nonmetro adjacent** | 4, 6, 8 | ~1,060 | Nonmetro counties adjacent to a metro area |
-| **Rural** | 5, 7, 9 | ~920 | Nonmetro counties not adjacent to a metro area |
+Source: <https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/>.
 
 **Connecticut note:** Lightcast adopted the post-2022Q3 planning-region FIPS (09110–09190) for all years, retroactively. RUCC 2023 has also already adopted these FIPS, so every CT planning region appears in the source file with its own RUCC code.
 
