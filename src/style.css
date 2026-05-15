@@ -29,8 +29,23 @@ html { font-size: 16.5px; }
   padding-left: var(--observablehq-inset-left);
   padding-right: 1rem;
 }
+/* When the sidebar is collapsed, Framework's default drops the left inset to
+ * ~0, which puts the expand-toggle button on top of the page H1 and the body
+ * prose. Reserve a small left gutter so the toggle has its own column. */
+#observablehq-sidebar-toggle:not(:checked):not(:indeterminate) ~ #observablehq-center {
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+}
 #observablehq-center {
   margin: 1rem 0;
+}
+
+/* The site title is the first <li> in the sidebar's first <ol>. The
+ * collapse-arrow (#observablehq-sidebar-close) is absolutely positioned at the
+ * top-right of that <ol>, so a long title wraps under the arrow. Pad the
+ * right side of the title link to clear the toggle's hit area. */
+#observablehq-sidebar > ol:first-of-type > li:first-child > a {
+  padding-right: 1.8rem;
 }
 
 /* Headings sized to match the wider content area. */
