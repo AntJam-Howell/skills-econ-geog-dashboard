@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/AntJam-Howell/skills-econ-geog-dashboard.git"
   },
-  "homepage": "https://antjam-howell.github.io/skills-econ-geog-dashboard/",
+  "homepage": "https://skills-econ-geog.netlify.app/",
   "scripts": {
     "dev": "observable preview",
     "build": "observable build",

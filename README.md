@@ -1,8 +1,10 @@
 # Economic Geography of U.S. Skill Specialization and Complexity
 
-An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024. Built on the [Observable Framework](https://observablehq.com/framework) as a fully static site. The released county-year parquet is queried client-side in the browser through DuckDB-WASM, so there is no backend server and no API.
+An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024. Built on the [Observable Framework](https://observablehq.com/framework) as a fully static site. The released county-year panel ships as a single CSV asset and is parsed client-side in the browser with `d3.csvParse`, so there is no backend server, no API, and no WebAssembly.
 
-**Live dashboard:** https://antjam-howell.github.io/skills-econ-geog-dashboard/
+**Live dashboard:** https://skills-econ-geog.netlify.app/
+
+**Fallback mirror:** https://antjam-howell.github.io/skills-econ-geog-dashboard/ (GitHub Pages; same build, slower CDN, weaker compression)
 
 **Companion dataset:** [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) (the 44-variable public-release panel that this dashboard visualizes)
 
@@ -90,13 +92,13 @@ Requires Node 20.6 or later.
 
 ## Deployment
 
-Pushing to `main` triggers `.github/workflows/deploy.yml`, which builds the Observable Framework site and publishes `dist/` to GitHub Pages. To enable on a fresh fork or clone:
+The dashboard is published from `main` to two static hosts in parallel.
 
-1. Push the repository to GitHub.
-2. Settings -> Pages -> Build and deployment -> Source = **GitHub Actions**.
-3. First successful run takes about three to four minutes. Subsequent pushes take about two minutes.
+**Canonical: Netlify.** Brotli compression on all assets and immutable caching on the content-hashed files under `/_file/*` and `/_observablehq/*`, configured in `netlify.toml` at the repo root. Build, publish directory, and Node version are set in the Netlify UI; `netlify.toml` is headers-only. Faster cold loads (~4.7 MB on the wire for the CSV; under 1 s on a fast connection); used by the live link above and the citation block on the About page.
 
-The site deploys to `https://<user>.github.io/skills-econ-geog-dashboard/`. The `base` field in `observablehq.config.js` is set to `/skills-econ-geog-dashboard/` to match. If you deploy under a different path, change the `base` value before building.
+**Fallback mirror: GitHub Pages.** Same build, deployed by `.github/workflows/deploy.yml` on every push to `main`. Gzip only, short max-age on hashed assets. Kept live so the dashboard survives if Netlify is unavailable. The `base` field in `observablehq.config.js` is set to `/skills-econ-geog-dashboard/` to match the GH Pages path; Netlify ignores `base` because it serves from the domain root.
+
+To enable GH Pages on a fresh fork or clone: push the repo to GitHub, then Settings -> Pages -> Build and deployment -> Source = **GitHub Actions**. First successful run takes about three to four minutes; subsequent pushes take about two minutes.
 
 ---
 

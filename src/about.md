@@ -12,7 +12,7 @@ All measures are derived from US job postings collected by **Lightcast** (former
 
 The aggregation chain runs raw postings → posting × skill → county-skill-year → county-year. What you see in this dashboard is the final county-year panel: 47,891 observations covering 3,194 counties.
 
-Suggested citation: Howell, A. (2026). *Lightcast Skills Dashboard: County-Year Skill Demand 2010-2024.* Center on Technology, Data & Society, Arizona State University.
+Suggested citation: Howell, A. (2026). *Lightcast Skills Dashboard: County-Year Skill Demand 2010-2024.* Center on Technology, Data & Society, Arizona State University. <https://skills-econ-geog.netlify.app/>
 
 ### Acknowledgments
 

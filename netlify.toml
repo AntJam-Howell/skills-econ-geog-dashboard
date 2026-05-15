@@ -1,0 +1,21 @@
+# Netlify configuration for the skills-econ-geog-dashboard mirror.
+# Build settings (publish dir, build command, Node version) are configured in
+# the Netlify UI; this file only sets HTTP cache headers.
+#
+# Observable Framework writes content-hashed filenames under /_file/* (static
+# data assets) and /_observablehq/* (JS chunks, CSS, runtime). Those paths are
+# safe to pin with a long immutable TTL: any change produces a new hash, so
+# stale cache entries can never be served as current.
+#
+# HTML pages keep the Netlify default (short cache + revalidate) so site
+# updates roll out immediately.
+
+[[headers]]
+  for = "/_file/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_observablehq/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
