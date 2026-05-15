@@ -1,6 +1,6 @@
 # Economic Geography of U.S. Skill Specialization and Complexity
 
-An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024. Built on the [Observable Framework](https://observablehq.com/framework) as a fully static site. The released county-year panel ships as a single CSV asset and is parsed client-side in the browser with `d3.csvParse`, so there is no backend server, no API, and no WebAssembly.
+An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024. The released county-year panel ships as a single CSV asset and is parsed client-side in the browser with `d3.csvParse`, so there is no backend server, no API, and no WebAssembly.
 
 **Live dashboard:** https://skills-econ-geog.netlify.app/
 

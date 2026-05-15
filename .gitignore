@@ -17,5 +17,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Note: src/data/*.parquet IS tracked. The 15 MB county-year panel ships with
-# the dashboard so DuckDB-WASM can query it client-side. Do not gitignore it.
+# Claude Code session notes (local-only, not part of the public repo)
+CLAUDE.md
