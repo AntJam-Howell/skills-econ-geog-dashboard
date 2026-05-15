@@ -1,4 +1,4 @@
-# Economic Geography of Skill Specialization and Complexity
+# Economic Geography Dashboard of U.S. Skill Specialization and Complexity
 
 An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024.
 
