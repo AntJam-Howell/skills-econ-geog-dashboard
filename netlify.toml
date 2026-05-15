@@ -2,10 +2,15 @@
 # Build settings (publish dir, build command, Node version) are configured in
 # the Netlify UI; this file only sets HTTP cache headers.
 #
-# Observable Framework writes content-hashed filenames under /_file/* (static
-# data assets) and /_observablehq/* (JS chunks, CSS, runtime). Those paths are
-# safe to pin with a long immutable TTL: any change produces a new hash, so
-# stale cache entries can never be served as current.
+# Observable Framework writes content-hashed filenames under four prefixes:
+#   /_file/*          — static data assets (parquet, csv, topojson)
+#   /_observablehq/*  — framework runtime, stdlib, client
+#   /_npm/*           — npm dependency chunks (d3 modules, plot, topojson-client)
+#   /_import/*        — local imports (src/components/*.js)
+# Every filename in these trees is content-hashed (8-hex-char fingerprint), so
+# any change to a file produces a new hash and a new URL. Pinning all four with
+# a long immutable TTL eliminates per-asset revalidation round-trips on repeat
+# visits — stale cache entries can never be served as current.
 #
 # HTML pages keep the Netlify default (short cache + revalidate) so site
 # updates roll out immediately.
@@ -17,5 +22,15 @@
 
 [[headers]]
   for = "/_observablehq/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_npm/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_import/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
