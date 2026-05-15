@@ -12,7 +12,7 @@ All measures are derived from US job postings collected by **Lightcast** (former
 
 The aggregation chain runs raw postings → posting × skill → county-skill-year → county-year. What you see in this dashboard is the final county-year panel: 47,891 observations covering 3,194 counties.
 
-Suggested citation: Howell, A. (2026). *Economic Geography of U.S. Skill Demand: an interactive dashboard.* Center on Technology, Data & Society, Arizona State University. <https://skills-econ-geog.netlify.app/>
+Suggested citation: Howell, A. (2026). *Economic Geography of Skill Specialization and Complexity: an interactive dashboard.* Center on Technology, Data & Society, Arizona State University. <https://skills-econ-geog.netlify.app/>
 
 ### Acknowledgments
 
