@@ -44,13 +44,11 @@ The Connecticut planning-region remap (historic 8 counties to the new 9 planning
 
 ## Citation
 
-If you use this dashboard, please cite both the dashboard and the underlying data release:
+If you use this dashboard, please cite:
 
 > Howell, Anthony (2026). *Economic Geography of Skill Specialization and Complexity: an interactive dashboard* [Software]. https://github.com/AntJam-Howell/skills-econ-geog-dashboard. Zenodo DOI to be assigned.
 
-> Howell, Anthony (2026). *U.S. county-year panel of labor and skill demand, 2010-2024* [Data set]. https://github.com/AntJam-Howell/skills-econ-geog-data. Zenodo DOI to be assigned.
-
-`CITATION.cff` provides machine-readable citation metadata.
+`CITATION.cff` provides machine-readable citation metadata. For the underlying data, see the citation in the [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) repository.
 
 ---
 
