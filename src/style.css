@@ -23,18 +23,23 @@ html { font-size: 16.5px; }
 #observablehq-sidebar {
   width: var(--observablehq-sidebar-width);
 }
-#observablehq-sidebar-toggle:checked ~ #observablehq-center,
-#observablehq-sidebar-toggle:indeterminate ~ #observablehq-center {
-  --observablehq-inset-left: calc(var(--observablehq-sidebar-width) + 1.625rem);
-  padding-left: var(--observablehq-inset-left);
-  padding-right: 1rem;
-}
-/* When the sidebar is collapsed, Framework's default drops the left inset to
- * ~0, which puts the expand-toggle button on top of the page H1 and the body
- * prose. Reserve a small left gutter so the toggle has its own column. */
-#observablehq-sidebar-toggle:not(:checked):not(:indeterminate) ~ #observablehq-center {
-  padding-left: 2.5rem;
-  padding-right: 1rem;
+/* Desktop layout rules. Gated behind min-width: 769px so the mobile block
+ * further down owns the small-viewport layout (sidebar-as-drawer, no left
+ * inset on main, etc.) without fighting the desktop padding-left math. */
+@media (min-width: 769px) {
+  #observablehq-sidebar-toggle:checked ~ #observablehq-center,
+  #observablehq-sidebar-toggle:indeterminate ~ #observablehq-center {
+    --observablehq-inset-left: calc(var(--observablehq-sidebar-width) + 1.625rem);
+    padding-left: var(--observablehq-inset-left);
+    padding-right: 1rem;
+  }
+  /* When the sidebar is collapsed, Framework's default drops the left inset
+   * to ~0, which puts the expand-toggle button on top of the page H1 and
+   * body prose. Reserve a small left gutter so the toggle has its own. */
+  #observablehq-sidebar-toggle:not(:checked):not(:indeterminate) ~ #observablehq-center {
+    padding-left: 2.5rem;
+    padding-right: 1rem;
+  }
 }
 #observablehq-center {
   margin: 1rem 0;
@@ -42,19 +47,25 @@ html { font-size: 16.5px; }
 
 /* The site title is the first <li> in the sidebar's first <ol>. The
  * collapse-arrow (#observablehq-sidebar-close) is absolutely positioned at the
- * top-right of that <ol>, so a long title wraps under the arrow.
- *
- * The constraint has to live on a block-level element so the text wrap point
- * moves left; padding-right on the inline <a> child doesn't shift wrap, it
- * only adds trailing inline space. Padding on the <ol> shrinks the content
- * area for every descendant. The close button is absolutely positioned, so
- * it ignores the <ol>'s padding and stays anchored to the corner. */
+ * top-right of that <ol>, so a long title wraps under the arrow. The padding
+ * on the <ol> clears the icon's column (since the <a> is inline and padding
+ * on it would not shift the wrap point), and the slightly smaller title
+ * font-size keeps the 57-char title on two lines instead of three. */
 #observablehq-sidebar > ol:first-of-type {
   padding-right: 2rem;
 }
+#observablehq-sidebar > ol:first-of-type > li:first-child > a {
+  font-size: 0.9em;
+  line-height: 1.25;
+}
 
-/* Headings sized to match the wider content area. */
-#observablehq-main h1 { font-size: 2.2em; line-height: 1.15; margin: 0.4em 0 0.4em; }
+/* Headings sized to match the wider content area. clamp() lets the H1
+ * shrink on narrow viewports without breaking the desktop appearance:
+ * 5vw resolves to ~64px on a 1280px window which is well above the 2.2rem
+ * upper bound, so desktop always renders at 2.2rem = 36.3px (identical to
+ * the previous `2.2em` rule given the 16.5px html root). On a 390px phone,
+ * 5vw = 19.5px and the min kicks in, giving a readable 1.5rem ≈ 24.75px. */
+#observablehq-main h1 { font-size: clamp(1.5rem, 5vw, 2.2rem); line-height: 1.15; margin: 0.4em 0 0.4em; }
 #observablehq-main h2 { font-size: 1.5em; line-height: 1.2; margin-top: 1.2em; }
 #observablehq-main h3 { font-size: 1.1em; }
 
@@ -307,8 +318,158 @@ h3.h3-flush { margin-top: 0; }
   opacity: 0.65;
 }
 
-/* Mobile: collapse the sidebar so the content can use the full width. */
-@media (max-width: 800px) {
-  #observablehq-sidebar { width: 100%; }
-  #observablehq-main { margin-left: 0; }
+/* ═══════════════════════════════════════════════════════════════════════════
+ * MOBILE LAYOUT
+ * Breakpoints: 768 (layout), 700 (controls/grids/charts), 640 (stacked
+ * controls), 480 (touch targets). Each rule is scoped to one breakpoint.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Mobile banner under the choropleth H1. Hidden on desktop, shown on small
+ * viewports. Lives on index.md as <div class="mobile-only-banner">. */
+.mobile-only-banner { display: none; }
+
+/* Mobile scatter fallback (under 700px the chart is replaced with a stub
+ * that points users to Rankings & trends). */
+.scatter-mobile-fallback { display: none; }
+
+/* Mobile tooltip overlay for touch devices. Hidden by default; the JS in
+ * index.md / scatter.md toggles .mobile-tooltip.open. */
+.mobile-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 0.6rem 0.8rem;
+  background: var(--observablehq-background-base, #16161d);
+  color: var(--observablehq-foreground, #f7f7f7);
+  border: 1px solid #6ee7b7;
+  border-radius: 0.35rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
+  font-size: 0.9rem;
+  line-height: 1.35;
+  pointer-events: auto;
+}
+.mobile-tooltip.open { display: block; }
+.mobile-tooltip .mobile-tooltip-close {
+  float: right;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.1em;
+  line-height: 1;
+  cursor: pointer;
+  margin-left: 0.6rem;
+  opacity: 0.6;
+}
+.mobile-tooltip .mobile-tooltip-close:hover { opacity: 1; }
+
+@media (max-width: 768px) {
+  /* Sidebar becomes an overlay drawer; no left inset on the main column so
+   * page content fills the viewport. Framework's drawer mechanics (the
+   * #observablehq-sidebar-toggle checkbox + #observablehq-sidebar-backdrop
+   * label) still drive show/hide. */
+  #observablehq-center {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  #observablehq-sidebar { width: 100%; max-width: 320px; }
+}
+
+@media (max-width: 700px) {
+  /* Collapse all multi-column grids to single column. Applies to:
+   *   - county.md family-card grid (.grid-cols-3)
+   *   - county.md sparkline grid (.family-block)
+   *   - scatter.md controls panel (.grid-cols-3.scatter-controls)
+   *   - scatter.md featured-pair list (.grid-cols-2)
+   *   - county.md total/YoY pair (.grid-cols-2) */
+  .grid-cols-3, .grid-cols-2 { grid-template-columns: 1fr; }
+  .family-block { grid-template-columns: 1fr; }
+
+  /* Sticky metric/year toolbar on the map page. Solid background and z-index
+   * so it stays legible while the choropleth scrolls underneath. The negative
+   * margins + matching padding extend the background to the viewport edges
+   * so there's no transparent gutter. */
+  #observablehq-main .toolbar,
+  #observablehq-main .toolbar-row {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--observablehq-background-base, #16161d);
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding: 0.4rem 1rem;
+  }
+
+  /* Mobile banner on the map page (Tier 2 item 7). */
+  .mobile-only-banner {
+    display: block;
+    padding: 0.6rem 0.85rem;
+    margin: 0.5rem 0 0.8rem 0;
+    background: rgba(110, 231, 183, 0.10);
+    border-left: 3px solid #6ee7b7;
+    border-radius: 0.25rem;
+    font-size: 0.92em;
+    line-height: 1.4;
+  }
+  .mobile-only-banner a { font-weight: 600; }
+
+  /* Hide the scatter chart container and the peer-table; show the fallback
+   * stub instead. The Controls panel still renders so users can see what
+   * the scatter was about, but the chart itself is the small-screen-killer. */
+  .scatter-chart-container,
+  .scatter-stats,
+  .peer-details {
+    display: none;
+  }
+  .scatter-mobile-fallback {
+    display: block;
+    padding: 0.9rem 1rem;
+    margin: 0.8rem 0;
+    background: rgba(110, 231, 183, 0.10);
+    border-left: 3px solid #6ee7b7;
+    border-radius: 0.25rem;
+    font-size: 0.95em;
+    line-height: 1.45;
+  }
+  .scatter-mobile-fallback a { font-weight: 600; }
+}
+
+@media (max-width: 640px) {
+  /* Stack the year slider and Play button vertically. Defensive: the JS in
+   * index.md should have already swapped the slider for a <select> at <700px
+   * and dropped the Play button, but if matchMedia detection failed (older
+   * browser, edge case) this keeps the controls legible. */
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Touch-target sizing per WCAG 2.5.5: minimum 44x44 px for tap targets. */
+  html { font-size: 15px; }
+  .info-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1em;
+  }
+  select,
+  input[type="checkbox"],
+  input[type="range"] {
+    min-height: 44px;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    height: 28px;
+    width: 28px;
+  }
+  input[type="range"]::-moz-range-thumb {
+    height: 28px;
+    width: 28px;
+  }
+  /* Inputs.range wraps its label + input in a horizontal layout; on a
+   * narrow phone the label gets squeezed. Let it stack. */
+  form[class*="oi-"] {
+    flex-wrap: wrap;
+  }
 }

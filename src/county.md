@@ -113,13 +113,16 @@ const shareRorHSeries = countyRows.map(r => {
 ```
 
 ```js
-// Build a sparkline with IQR band. Width is responsive: 3-column outer grid
-// + 2-column inner grid means 6 sparklines across. `width` here is the
-// content area width (Observable's reactive variable), already accounting
-// for the sidebar. Buffer ~140px reserved for: 3 cards × ~24px padding,
-// 2 outer grid gaps × 16px, 3 inner grid gaps × 10px, and SVG margins.
-// Slightly conservative so labels like "519,721" don't clip at the right.
-const _sparkW = Math.max(160, Math.floor((width - 140) / 6));
+// Build a sparkline with IQR band. Width is responsive:
+//   - Desktop: 3-column outer grid + 2-column inner grid means 6 sparklines
+//     across. Buffer ~140px reserved for: 3 cards × ~24px padding, 2 outer
+//     grid gaps × 16px, 3 inner grid gaps × 10px, and SVG margins.
+//   - Mobile (<700px): mobile CSS collapses both grids to one column, so
+//     each sparkline gets the full content width and should fill the cell.
+// `width` is Framework's reactive content-area width.
+const _sparkW = width < 700
+  ? Math.max(240, Math.min(420, width - 40))
+  : Math.max(120, Math.floor((width - 140) / 6));
 
 function sparkline(metric, county, iqr, customSeries = null) {
   const k = metric.key;

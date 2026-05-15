@@ -6,6 +6,11 @@ toc: false
 <h1 class="h1-clip">Spatial visualization</h1>
 <p class="page-intro">County-level skill demand, local specialization, and complexity, built from <b>433.6 million job postings</b>, 2010 to 2024. Pick a metric and a year; hover a county for details; click any county to open it on the <b>County profiles</b> page. For ranked tables, distributions, and national labor-demand context see <b>Rankings &amp; trends</b>; for bivariate views see <b>County comparisons</b>.</p>
 
+<div class="mobile-only-banner">
+  The choropleth map is best viewed on a tablet or desktop. For mobile, try
+  <a href="./rankings">Rankings &amp; trends</a> or <a href="./county">County profiles</a>.
+</div>
+
 ```js
 import * as topojson from "npm:topojson-client";
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricGroups, fipsForData, CT_PLANNING_REGION_NAMES, METRIC_INFO, metricSelect, SUPPRESSION_THRESHOLD, makeInfoPopover} from "./components/utils.js";
@@ -65,36 +70,47 @@ const metric = Generators.input(metricEl);
 ```
 
 ```js
-// Year slider with play button. The play button auto-advances 2010 → 2024
-// at ~700ms per step; click again to pause. Defaults to 2024 on load.
-const yearInput = Inputs.range([2010, 2024], {label: "Year", step: 1, value: 2024});
-const playBtn = html`<button style="margin-left: 1rem; padding: 0.2rem 0.6rem; cursor: pointer;">▶ Play 2010–2024</button>`;
-let _playing = false;
-let _timer = null;
-playBtn.onclick = () => {
-  _playing = !_playing;
-  playBtn.textContent = _playing ? "⏸ Pause" : "▶ Play 2010–2024";
-  if (_playing) {
-    if (+yearInput.value >= 2024) {
-      yearInput.value = 2010;
-      yearInput.dispatchEvent(new Event("input", {bubbles: true}));
-    }
-    _timer = setInterval(() => {
-      const v = +yearInput.value;
-      if (v >= 2024) {
-        clearInterval(_timer);
-        _playing = false;
-        playBtn.textContent = "▶ Play 2010–2024";
-        return;
+// Year input. On viewports <= 700px the slider is replaced with a native
+// <select> (drag-on-touch is awkward) and the Play button is dropped.
+// matchMedia at module-load time is fine here: Framework re-evaluates this
+// cell on viewport-class change anyway, and Inputs.range / Inputs.select
+// both expose the same .value + "input" event surface for Generators.input.
+const _isMobile = matchMedia("(max-width: 700px)").matches;
+const yearInput = _isMobile
+  ? Inputs.select(Array.from({length: 15}, (_, i) => 2010 + i), {label: "Year", value: 2024})
+  : Inputs.range([2010, 2024], {label: "Year", step: 1, value: 2024});
+
+if (_isMobile) {
+  display(html`<div class="toolbar-row">${yearInput}</div>`);
+} else {
+  const playBtn = html`<button style="margin-left: 1rem; padding: 0.2rem 0.6rem; cursor: pointer;">▶ Play 2010–2024</button>`;
+  let _playing = false;
+  let _timer = null;
+  playBtn.onclick = () => {
+    _playing = !_playing;
+    playBtn.textContent = _playing ? "⏸ Pause" : "▶ Play 2010–2024";
+    if (_playing) {
+      if (+yearInput.value >= 2024) {
+        yearInput.value = 2010;
+        yearInput.dispatchEvent(new Event("input", {bubbles: true}));
       }
-      yearInput.value = v + 1;
-      yearInput.dispatchEvent(new Event("input", {bubbles: true}));
-    }, 700);
-  } else if (_timer) {
-    clearInterval(_timer);
-  }
-};
-display(html`<div class="toolbar-row">${yearInput}${playBtn}</div>`);
+      _timer = setInterval(() => {
+        const v = +yearInput.value;
+        if (v >= 2024) {
+          clearInterval(_timer);
+          _playing = false;
+          playBtn.textContent = "▶ Play 2010–2024";
+          return;
+        }
+        yearInput.value = v + 1;
+        yearInput.dispatchEvent(new Event("input", {bubbles: true}));
+      }, 700);
+    } else if (_timer) {
+      clearInterval(_timer);
+    }
+  };
+  display(html`<div class="toolbar-row">${yearInput}${playBtn}</div>`);
+}
 const year = Generators.input(yearInput);
 ```
 
@@ -415,6 +431,53 @@ const chart = Plot.plot({
 }
 
 display(chart);
+
+// Tap-to-show tooltip for touch-primary devices. On hover devices this block
+// is a no-op so the Plot title channel (browser-native hover tooltip) and
+// the href navigation both work unchanged. On touch devices we suppress the
+// href default and show a custom overlay that closes on the same county
+// tapped again, on tap outside the chart, or on the explicit × button.
+//
+// AbortController + invalidation.then() so reactive re-runs of this cell
+// (year/metric changes) don't accumulate document-level click listeners.
+if (matchMedia("(hover: none)").matches) {
+  document.querySelectorAll(".mobile-tooltip").forEach(el => el.remove());
+  const tooltip = document.createElement("div");
+  tooltip.className = "mobile-tooltip";
+  document.body.appendChild(tooltip);
+  let _activePath = null;
+  const ac = new AbortController();
+
+  function hideTooltip() {
+    tooltip.classList.remove("open");
+    _activePath = null;
+  }
+
+  chart.addEventListener("click", (e) => {
+    e.preventDefault();
+    const path = e.target.closest("path");
+    if (!path || path === _activePath) { hideTooltip(); return; }
+    const datum = d3.select(path).datum();
+    if (!datum) { hideTooltip(); return; }
+    const txt = buildTitle(datum);
+    const fips = fmtFips(datum.id);
+    tooltip.innerHTML = `<button class="mobile-tooltip-close" type="button" aria-label="Close">×</button>`
+      + txt.split("\n").map(line => `<div>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div>`).join("")
+      + `<div style="margin-top:0.4rem"><a href="./county?fips=${fips}">View county profile →</a></div>`;
+    tooltip.classList.add("open");
+    const w = 320, h = 220;
+    tooltip.style.left = Math.max(8, Math.min(e.clientX, window.innerWidth - w - 8)) + "px";
+    tooltip.style.top  = Math.max(8, Math.min(e.clientY + 14, window.innerHeight - h - 8)) + "px";
+    tooltip.querySelector(".mobile-tooltip-close").onclick = (ev) => { ev.stopPropagation(); hideTooltip(); };
+    _activePath = path;
+  }, {signal: ac.signal});
+
+  document.addEventListener("click", (e) => {
+    if (!chart.contains(e.target) && !tooltip.contains(e.target)) hideTooltip();
+  }, {signal: ac.signal});
+
+  invalidation.then(() => { ac.abort(); tooltip.remove(); });
+}
 
 // Caption beneath the map: hatch swatches + counts.
 const capItems = [];

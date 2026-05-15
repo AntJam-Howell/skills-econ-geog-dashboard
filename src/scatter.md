@@ -60,11 +60,14 @@ const yMetricEl = metricSelect(yDefault, scatterMetrics);
 const xMetric = Generators.input(xMetricEl);
 const yMetric = Generators.input(yMetricEl);
 
-const yearEl = Inputs.range([2010, 2024], {
-  label: "Year",
-  step: 1,
-  value: yearDefault,
-});
+// On viewports <= 700px the year slider becomes a native <select>; the
+// scatter chart itself is hidden by CSS below 700px, but the input still
+// renders so users see what the chart was about and so the URL deep-link
+// state stays correct when navigating away to /rankings or /county.
+const _isMobileYear = matchMedia("(max-width: 700px)").matches;
+const yearEl = _isMobileYear
+  ? Inputs.select(Array.from({length: 15}, (_, i) => 2010 + i), {label: "Year", value: yearDefault})
+  : Inputs.range([2010, 2024], {label: "Year", step: 1, value: yearDefault});
 const year = Generators.input(yearEl);
 
 const minPostingsEl = Inputs.range([0, 50000], {
@@ -481,7 +484,7 @@ const xTicksFinal = (xDecades && yDecades && xDecades[0] === yDecades[0] && xDec
   ? xDecades.slice(1)
   : xDecades;
 
-display(Plot.plot({
+const scatterChart = Plot.plot({
   width: width,
   height: Math.max(540, Math.min(740, width * 0.55)),
   // Generous margins so axis labels and the highest / right-most tick
@@ -514,7 +517,56 @@ display(Plot.plot({
   },
   r: {range: [2, 14]},
   marks,
-}));
+});
+
+// Wrap the chart in a container so CSS can hide it on mobile (and show the
+// .scatter-mobile-fallback sibling instead). The fallback is hidden on
+// desktop by default; CSS toggles the pair at the 700px breakpoint.
+display(html`
+  <div class="scatter-chart-container">${scatterChart}</div>
+  <div class="scatter-mobile-fallback">
+    The scatter chart is best viewed on a tablet or desktop.
+    <a href="./rankings">View Rankings &amp; trends →</a>
+  </div>
+`);
+
+// Tap-to-show tooltip for touch-primary devices (e.g. tablets above 700px
+// where the chart still renders). Same AbortController pattern as the
+// choropleth so reactive re-runs don't accumulate listeners.
+if (matchMedia("(hover: none)").matches) {
+  document.querySelectorAll(".mobile-tooltip").forEach(el => el.remove());
+  const tooltip = document.createElement("div");
+  tooltip.className = "mobile-tooltip";
+  document.body.appendChild(tooltip);
+  let _activeDot = null;
+  const ac = new AbortController();
+  function hideTooltip() { tooltip.classList.remove("open"); _activeDot = null; }
+
+  scatterChart.addEventListener("click", (e) => {
+    e.preventDefault();
+    const dot = e.target.closest("circle, path");
+    if (!dot || dot === _activeDot) { hideTooltip(); return; }
+    const titleEl = dot.querySelector("title");
+    if (!titleEl) { hideTooltip(); return; }
+    const datum = d3.select(dot).datum();
+    const fips = datum?.fips;
+    tooltip.innerHTML = `<button class="mobile-tooltip-close" type="button" aria-label="Close">×</button>`
+      + titleEl.textContent.split("\n").map(line => `<div>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div>`).join("")
+      + (fips ? `<div style="margin-top:0.4rem"><a href="./county?fips=${fips}">View county profile →</a></div>` : "");
+    tooltip.classList.add("open");
+    const w = 320, h = 220;
+    tooltip.style.left = Math.max(8, Math.min(e.clientX, window.innerWidth - w - 8)) + "px";
+    tooltip.style.top  = Math.max(8, Math.min(e.clientY + 14, window.innerHeight - h - 8)) + "px";
+    tooltip.querySelector(".mobile-tooltip-close").onclick = (ev) => { ev.stopPropagation(); hideTooltip(); };
+    _activeDot = dot;
+  }, {signal: ac.signal});
+
+  document.addEventListener("click", (e) => {
+    if (!scatterChart.contains(e.target) && !tooltip.contains(e.target)) hideTooltip();
+  }, {signal: ac.signal});
+
+  invalidation.then(() => { ac.abort(); tooltip.remove(); });
+}
 ```
 
 <div class="card scatter-stats">
