@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
-  "description": "Interactive dashboard for the U.S. county-year panel of labor and skill demand, 2010-2024 (Lightcast).",
+  "description": "Interactive dashboard for the U.S. county-year panel of labor and skill demand, 2010-2024.",
   "license": "MIT",
   "author": "Anthony Howell <ajhowel5@asu.edu>",
   "repository": {

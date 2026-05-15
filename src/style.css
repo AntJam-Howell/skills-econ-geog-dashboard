@@ -433,22 +433,27 @@ h3.h3-flush { margin-top: 0; }
   }
   .scatter-mobile-fallback a { font-weight: 600; }
 
-  /* Rankings table: hide state, FIPS, and total-postings columns so the
-   * county name + value pair fits on a phone without horizontal scroll.
-   * Column indices in the rendered <table>: 1=name, 2=state, 3=fips,
-   * 4=value, 5=postings. */
-  .rankings-table-card th:nth-child(2),
-  .rankings-table-card td:nth-child(2),
+  /* Rankings table: hide selection, state, FIPS, and total-postings columns
+   * so the county name + selected-metric value pair fits on a phone without
+   * horizontal scroll. Inputs.table always renders a selection column at
+   * position 1 (checkbox / radio / empty <td>); the data columns start at
+   * position 2. Indices: 1=selection, 2=name, 3=state, 4=fips, 5=value,
+   * 6=postings. Keep 2 and 5. */
+  .rankings-table-card th:nth-child(1),
+  .rankings-table-card td:nth-child(1),
   .rankings-table-card th:nth-child(3),
   .rankings-table-card td:nth-child(3),
-  .rankings-table-card th:nth-child(5),
-  .rankings-table-card td:nth-child(5) {
+  .rankings-table-card th:nth-child(4),
+  .rankings-table-card td:nth-child(4),
+  .rankings-table-card th:nth-child(6),
+  .rankings-table-card td:nth-child(6) {
     display: none;
   }
   /* Let the county-name column take whatever width is left after the
-   * value column renders. */
-  .rankings-table-card td:first-child,
-  .rankings-table-card th:first-child {
+   * value column renders. nth-child(2) is the County column since
+   * position 1 is the (hidden) selection column. */
+  .rankings-table-card th:nth-child(2),
+  .rankings-table-card td:nth-child(2) {
     white-space: normal;
     word-break: break-word;
   }
