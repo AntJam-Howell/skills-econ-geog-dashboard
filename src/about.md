@@ -4,63 +4,22 @@ title: How to use the dashboard
 
 # How to use the dashboard
 
-A short guide to what's in the dashboard, how to read each page, and what the main measures mean. New users should start with **About**, then **How to interpret the main measures**. Power users can skip to **Common workflows**.
-
 ## About
 
-All measures are derived from US job postings collected by **Lightcast** (formerly Burning Glass Technologies), 2010 to 2024. Postings are de-duplicated, geocoded to county, and parsed for skills against Lightcast's Open Skills taxonomy.
+This dashboard visualizes a county-year aggregate panel of U.S. labor and skill demand covering 3,194 counties from 2010 to 2024 (47,126 county-year observations), exposing 19 core measures organized into five metric families. Access to the complete 201-variable panel, which includes the full suite of economic geography skill-based measures by county and by county × entity type, along with the codebook and the reproducible construction pipeline, lives in the companion repository [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data).
 
-The aggregation chain runs raw postings → posting × skill → county-skill-year → county-year. What you see in this dashboard is the final county-year panel: 47,891 observations covering 3,194 counties.
+Every metric in the dashboard has an **ⓘ** icon next to it; click it for a one-paragraph plain-language definition. For additional context on these variable definitions and technical background on how each measure is developed and used, see the accompanying working paper:
 
-Suggested citation: Howell, A. (2026). *Economic Geography of Skill Specialization and Complexity: an interactive dashboard.* Center on Technology, Data & Society, Arizona State University. <https://skills-econ-geog.netlify.app/>
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography of U.S. skills: specialization, relatedness, and complexity.* Working paper, SSRN. <https://ssrn.com/abstract=XXXXXXX>
 
-### Acknowledgments
-
-Dashboard built and maintained by **Anthony Howell** (Arizona State University). This material is based upon work supported by the **National Science Foundation under Grant No. 2431853**. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author and do not necessarily reflect the views of the National Science Foundation.
-
-### Dashboard scope
+## Dashboard scope
 
 The dashboard exposes four analytical pages:
 
-- **[Spatial visualization](./)** (landing) — choropleth map of any county-year metric, with low-volume suppression and a year slider.
-- **[Rankings & trends](./rankings)** — ranked tables and distribution histograms for any county-year metric, plus four national labor-demand context charts.
-- **[County comparisons](./scatter)** — bivariate scatter with a focal-county highlight and Euclidean *k*-nearest-neighbor peer discovery.
-- **[County profiles](./county)** — per-county sparkline trajectories grouped by metric family.
-
-## How to interpret the main measures
-
-The metric families below match the optgroups in the metric dropdowns and the family-card sparkline groups on the County profiles. Click the **ⓘ** icon next to any metric in the dashboard for a one-paragraph plain-language definition.
-
-### Skill Specialization
-
-A skill is a **local specialization** when the county's share of mentions of that skill is greater than the national share, equivalently a revealed comparative advantage (RCA > 1) in the skill. RCA pools across all three Lightcast skill types (specialized, software, common).
-
-- **Local specializations** — count of skills where the county is locally specialized. Default landing metric for the map and rankings pages.
-- **Average skills per posting** — total skill mentions divided by postings with at least one skill.
-- **Distinct skills demanded** — count of unique skill names appearing at least once in the county-year.
-- **Skill concentration (HHI)** — Herfindahl-Hirschman index of skill-mention frequencies. Higher means a few skills dominate; lower means many skills evenly distributed.
-
-### Economic complexity and sophistication
-
-- **Economic Complexity Index (ECI)** standardizes the Hidalgo-Hausmann method of reflections. Higher ECI counties have local specializations that are themselves complex — few other counties also specialize in them.
-- **Skill fitness** is the Tacchella non-linear alternative to ECI. It rewards counties with many local specializations, especially complex ones, but uses a multiplicative form that handles diversification differently from ECI.
-- **Skill entropy** — Shannon entropy of the skill-frequency distribution, in bits. Effective number of skills.
-- **Average ubiquity of local specializations** — mean ubiquity (number of other counties also specializing in the same skill) of the focal county's local specializations. Lower means specializing in rarer skills.
-
-### Network position
-
-Where the county's portfolio of local specializations sits in the global skill-relatedness network.
-
-- **Skill density** — average φ-relatedness from each skill the county is NOT specialized in to the county's existing local specializations (Balland et al. 2019). Predicts what the county is likely to acquire next.
-- **Skill coherence** — average pairwise relatedness among the county's local specializations (Neffke et al. 2011). Higher means an internally coherent portfolio rather than scattered specializations.
-- **Average centrality of local specializations** — mean centrality of local specializations in the global skill-skill network.
-
-### Volume
-
-- **Total postings** — count of unique job postings active in the county-year. The most basic measure of labor demand.
-- **Share specialized** — share of skill mentions classified as specialized (technical or domain-specific, like SQL, GAAP, FDA submissions).
-- **Share software** — share classified as named software (Excel, AWS, Salesforce).
-- **Share common, soft** — share classified as common or soft (communication, teamwork, problem-solving).
+- **[Spatial visualization](./)** (landing): choropleth map of any county-year metric, with low-volume suppression and a year slider.
+- **[Rankings & trends](./rankings)**: ranked tables and distribution histograms for any county-year metric, plus four national labor-demand context charts.
+- **[County comparisons](./scatter)**: bivariate scatter with a focal-county highlight and Euclidean *k*-nearest-neighbor peer discovery.
+- **[County profiles](./county)**: per-county sparkline trajectories grouped by metric family.
 
 ## Common workflows
 
@@ -87,7 +46,7 @@ Tip: the color scale stays stable as the year changes so colors are comparable y
 ### Workflow 2 — What does this county look like in detail?
 
 1. Open **[County profiles](./county)**. Type a name, state, or FIPS in the selector at the top.
-2. Sparklines are grouped by family. The dashed line is the national median for that year; the grey band is the inter-quartile range across all counties; the colored line + dot is your county.
+2. Sparklines are grouped by family. The dashed line is the national median for that year; the grey band is the inter-quartile range across all counties; the colored line and dot is your county.
 
 ### Workflow 3 — How are two measures related?
 
@@ -122,6 +81,10 @@ The "Postings by metro tier" panel and the `rucc_tier` column come from the **US
 
 Source: <https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/>.
 
-**Connecticut note:** Lightcast adopted the post-2022Q3 planning-region FIPS (09110–09190) for all years, retroactively. RUCC 2023 has also already adopted these FIPS, so every CT planning region appears in the source file with its own RUCC code.
+## Attribution
 
-State-level placeholder FIPS (01999, 02999, etc., used by Lightcast for postings without a county assignment) are excluded from the dashboard panel.
+Dashboard built and maintained by Anthony Howell. Any errors are my own; please submit a GitHub issue for any errors or suggestions: [Link](https://github.com/AntJam-Howell/skills-econ-geog-dashboard).
+
+## Acknowledgments
+
+This material is based upon work supported by the National Science Foundation under Grant No. 2431853. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author and do not necessarily reflect the views of the National Science Foundation.
