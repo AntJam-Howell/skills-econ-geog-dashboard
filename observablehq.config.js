@@ -2,7 +2,7 @@
 // See https://observablehq.com/framework/config for full documentation.
 
 export default {
-  title: "Economic Geography of Skill Specialization and Complexity",
+  title: "Economic Geography of U.S. Skill Demand",
   root: "src",
 
   // Page-level styles live in src/style.css so they get cached and compressed

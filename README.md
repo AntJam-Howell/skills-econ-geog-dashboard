@@ -1,4 +1,4 @@
-# Economic Geography of U.S. Skill Specialization and Complexity
+# Economic Geography of U.S. Skill Demand
 
 An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024.
 
@@ -46,7 +46,7 @@ The Connecticut planning-region remap (historic 8 counties to the new 9 planning
 
 If you use this dashboard, please cite both the dashboard and the underlying data release:
 
-> Howell, Anthony (2026). *Economic Geography of U.S. Skill Specialization and Complexity: an interactive dashboard* [Software]. https://github.com/AntJam-Howell/skills-econ-geog-dashboard. Zenodo DOI to be assigned.
+> Howell, Anthony (2026). *Economic Geography of U.S. Skill Demand: an interactive dashboard* [Software]. https://github.com/AntJam-Howell/skills-econ-geog-dashboard. Zenodo DOI to be assigned.
 
 > Howell, Anthony (2026). *U.S. county-year panel of labor and skill demand, 2010-2024* [Data set]. https://github.com/AntJam-Howell/skills-econ-geog-data. Zenodo DOI to be assigned.
 
