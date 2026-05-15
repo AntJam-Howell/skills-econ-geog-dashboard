@@ -8,16 +8,13 @@ Public-facing dashboard for the Lightcast Skills project (separate from the AI E
 
 ## Architecture in one paragraph
 
-Static-site dashboard built on **Observable Framework** (Mike Bostock's static data-app framework). The county-year panel ships as a single CSV asset (~11 MB raw, ~4.7 MB on the wire after host compression) and is parsed client-side with `d3.csvParse` plus a row converter that keeps `county` (5-digit FIPS) and `rucc_tier` as strings while coercing the rest to numbers. No backend, no API, no WebAssembly. Build output is a static `dist/` folder. Two parallel deploys from `main`: Netlify (canonical) and GitHub Pages (fallback mirror).
+Static-site dashboard built on **Observable Framework** (Mike Bostock's static data-app framework). The county-year panel ships as a single CSV asset (~11 MB raw, ~4.7 MB on the wire after Brotli) and is parsed client-side with `d3.csvParse` plus a row converter that keeps `county` (5-digit FIPS) and `rucc_tier` as strings while coercing the rest to numbers. No backend, no API, no WebAssembly. Build output is a static `dist/` folder. Single deploy from `main` to Netlify.
 
-## Hosts
+## Host
 
-| | URL | Compression | Hashed-asset cache |
-|---|---|---|---|
-| Canonical | https://skills-econ-geog.netlify.app/ | Brotli | `public, max-age=31536000, immutable` (set in `netlify.toml`) |
-| Fallback mirror | https://antjam-howell.github.io/skills-econ-geog-dashboard/ | Gzip | `max-age=600` (GH Pages default, not configurable) |
+Sole canonical host: **https://skills-econ-geog.netlify.app/**, served from the domain root. Brotli on all assets and `Cache-Control: public, max-age=31536000, immutable` on the content-hashed files under `/_file/*` and `/_observablehq/*` via `netlify.toml`. Build command, publish dir, and Node version are set in the Netlify UI; `netlify.toml` is headers-only.
 
-The `base` field in `observablehq.config.js` is `/skills-econ-geog-dashboard/` so paths work on GH Pages. Netlify serves from the domain root and ignores `base`. Same build, both hosts, no separate config per environment.
+`observablehq.config.js` has no `base` path set: Netlify serves from `/`, and the GitHub Pages mirror that previously required `/skills-econ-geog-dashboard/` was retired in Phase 6.
 
 ## Loader pattern (all four data pages)
 
@@ -40,10 +37,9 @@ const panel = d3.csvParse(_csvText, r => {
 
 ```
 .
-├── observablehq.config.js     # Site title, nav, theme, base path. Edit page list here.
+├── observablehq.config.js     # Site title, nav, theme. Edit page list here.
 ├── package.json               # Dependencies. npm run dev / build / deploy.
 ├── netlify.toml               # Cache headers for Netlify. Build config lives in Netlify UI.
-├── .github/workflows/deploy.yml  # GitHub Pages auto-deploy on push to main.
 ├── CITATION.cff               # Citation metadata, points to Netlify canonical URL.
 ├── README.md                  # Public-facing readme.
 ├── CLAUDE.md                  # This file.
@@ -108,14 +104,16 @@ The 39-column CSV mirrors the public-release variable set from the sister data r
 ## What this repo is NOT
 
 - Not a database. All queries are on the static CSV, in memory, in the browser.
-- Not authenticated. Everything is public on both Netlify and GH Pages.
+- Not authenticated. Everything is public on Netlify.
 - Not server-rendered. No SSR, no API. Pure static.
 - Not WebAssembly-backed. Phase 4 (2026-05-14) removed parquet-wasm; nothing in the bundle is WASM.
 - Not for the AI Effects project (Track 3, NSF Theme I, etc.). This is the Lightcast Skills project deliverable.
 
 ## Resolved
 
-- **Phase 4: ship CSV, no WASM** (2026-05-14, commit `59b1544`). All four data pages migrated from `FileAttachment(...).parquet()` to `FileAttachment(...).text()` + `d3.csvParse(text, row converter)`. The parquet-wasm dependency is gone, page bundles dropped from ~869 KB to ~635 KB, and the CSV compresses to ~4.7 MB on Netlify (Brotli) and ~4.8 MB on GH Pages (gzip). Total wire bytes comparable to the parquet+parquet-wasm path but without the WASM module.
+- **Phase 6: retire the GitHub Pages mirror** (2026-05-15). Single-host going forward: Netlify is canonical, GH Pages is gone. Deleted `.github/workflows/deploy.yml`, removed `base: "/skills-econ-geog-dashboard/"` from `observablehq.config.js` (Netlify serves from `/`), stripped the fallback-mirror language from `README.md`, `CITATION.cff`, and the sister `skills-econ-geog-data` README. Rationale: the dual-host setup was creating more confusion (different cache headers, different `base` semantics, two URLs to keep in sync across the manuscript and sister repo) than the redundancy was worth. The user must manually flip GH Pages Source to "None" in repo Settings -> Pages; that step is not scriptable.
+- **Phase 5: Netlify canonical, GH Pages mirror** (2026-05-15, commit `f43704e`, superseded by Phase 6). Set up the two-host arrangement with `netlify.toml` for immutable caching; cross-refs in dashboard README, CITATION.cff, sister repo README updated to Netlify canonical.
+- **Phase 4: ship CSV, no WASM** (2026-05-14, commit `59b1544`). All four data pages migrated from `FileAttachment(...).parquet()` to `FileAttachment(...).text()` + `d3.csvParse(text, row converter)`. The parquet-wasm dependency is gone, page bundles dropped from ~869 KB to ~635 KB, and the CSV compresses to ~4.7 MB on the wire under Brotli. Total wire bytes comparable to the parquet+parquet-wasm path but without the WASM module.
 - **Phase 3 Arrow IPC attempt, rolled back** (2026-05-14, commits `aaa3d7f` -> `3a43bdb` -> `09fb73c`). Arrow file parsed correctly in Node across every input shape (Buffer, Uint8Array, ArrayBuffer, Promise, Response, fetch) but Framework's browser path threw `Unrecognized type: "undefined" (24)` on standard types only (Utf8, Int, FloatingPoint). Cause never explained. Path is closed; do not re-attempt.
 - **Phase 2 size cut** (2026-04-26 -> 2026-05-14, commits `e532fb4`, `c459807`, `c292079`). Metric floats cast to float32, ints to int32, parquet shrank from 5.6 MB to 4.0 MB. Float32 casts carried through into the Phase 4 CSV by rounding to 6 sig figs. DuckDB-WASM dependency removed across all four data pages.
 - **Phase 1: drop within-county skill data** (commit `5e61a3b`). Per-skill columns (top-5 names, churning counts, n_rca_skills_filtered) removed from the dashboard export. Together with the same-day removal of the County skill explorer and the Top-skills section on County profiles, the per-skill features are no longer in scope for this dashboard. Source preserved at `../lightcast-dashboard_Skills/` for the future skills-only dashboard.

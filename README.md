@@ -4,8 +4,6 @@ An open-access, interactive dashboard for exploring a U.S. county-year panel of 
 
 **Live dashboard:** https://skills-econ-geog.netlify.app/
 
-**Fallback mirror:** https://antjam-howell.github.io/skills-econ-geog-dashboard/ (GitHub Pages; same build, slower CDN, weaker compression)
-
 **Companion dataset:** [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) (the 44-variable public-release panel that this dashboard visualizes)
 
 ---
@@ -56,7 +54,7 @@ skills-econ-geog-dashboard/
 ├── observablehq.config.js           # site title, nav, theme, base path
 ├── package.json                     # dependencies
 ├── package-lock.json
-├── .github/workflows/deploy.yml     # auto-deploy to GitHub Pages on push to main
+├── netlify.toml                     # Netlify cache headers (build config lives in UI)
 └── src/
     ├── index.md                     # Spatial visualization (choropleth + slider)
     ├── rankings.md                  # Rankings & trends
@@ -92,13 +90,9 @@ Requires Node 20.6 or later.
 
 ## Deployment
 
-The dashboard is published from `main` to two static hosts in parallel.
+The dashboard is published from `main` to **Netlify**, served from the domain root at https://skills-econ-geog.netlify.app/. Netlify auto-deploys on every push: it runs `npm run build` and publishes `dist/`. Build command, publish directory, and Node version are set in the Netlify UI. The repo-level `netlify.toml` is headers-only: it pins `Cache-Control: public, max-age=31536000, immutable` on the content-hashed assets under `/_file/*` and `/_observablehq/*`, and pairs with Brotli compression to give sub-second cold loads on a fast connection.
 
-**Canonical: Netlify.** Brotli compression on all assets and immutable caching on the content-hashed files under `/_file/*` and `/_observablehq/*`, configured in `netlify.toml` at the repo root. Build, publish directory, and Node version are set in the Netlify UI; `netlify.toml` is headers-only. Faster cold loads (~4.7 MB on the wire for the CSV; under 1 s on a fast connection); used by the live link above and the citation block on the About page.
-
-**Fallback mirror: GitHub Pages.** Same build, deployed by `.github/workflows/deploy.yml` on every push to `main`. Gzip only, short max-age on hashed assets. Kept live so the dashboard survives if Netlify is unavailable. The `base` field in `observablehq.config.js` is set to `/skills-econ-geog-dashboard/` to match the GH Pages path; Netlify ignores `base` because it serves from the domain root.
-
-To enable GH Pages on a fresh fork or clone: push the repo to GitHub, then Settings -> Pages -> Build and deployment -> Source = **GitHub Actions**. First successful run takes about three to four minutes; subsequent pushes take about two minutes.
+A GitHub Pages mirror existed through Phase 5 and was retired in Phase 6. Netlify is the sole host.
 
 ---
 

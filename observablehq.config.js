@@ -29,8 +29,8 @@ export default {
 
   sidebar: true,
 
-  // Deployed at https://antjam-howell.github.io/skills-econ-geog-dashboard/
-  base: "/skills-econ-geog-dashboard/",
-
+  // Deployed at https://skills-econ-geog.netlify.app/ (Netlify, served from
+  // domain root). The GH Pages mirror was retired in Phase 6; no `base` path
+  // is needed.
   output: "dist",
 };
