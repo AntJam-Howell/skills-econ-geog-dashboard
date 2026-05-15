@@ -19,3 +19,6 @@ yarn-error.log*
 
 # Claude Code session notes (local-only, not part of the public repo)
 CLAUDE.md
+SESSION_LOG.md
+.claudeignore
+_archive/
