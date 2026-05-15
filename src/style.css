@@ -45,18 +45,32 @@ html { font-size: 16.5px; }
   margin: 1rem 0;
 }
 
-/* The site title is the first <li> in the sidebar's first <ol>. The
- * collapse-arrow (#observablehq-sidebar-close) is absolutely positioned at the
- * top-right of that <ol>, so a long title wraps under the arrow. The padding
- * on the <ol> clears the icon's column (since the <a> is inline and padding
- * on it would not shift the wrap point), and the slightly smaller title
- * font-size keeps the 57-char title on two lines instead of three. */
+/* The site title is the first <li> in the sidebar's first <ol>. Framework's
+ * default puts the collapse arrow (#observablehq-sidebar-close) at the
+ * top-right of the sidebar, crowding the title and forcing it to wrap into
+ * a narrow column. Move the arrow to the vertical middle of the sidebar's
+ * right edge — that frees the full sidebar width for the title and makes
+ * the toggle easier to reach mid-page anyway.
+ *
+ * #observablehq-sidebar-close is anchored to the sidebar (which has
+ * `position: sticky` from layout.css, establishing a containing block), so
+ * `position: absolute` honors that anchor. We pin it to viewport vertical
+ * center via `position: fixed` with `top: 50%` so it stays mid-screen even
+ * if the sidebar nav is long enough to scroll. */
 #observablehq-sidebar > ol:first-of-type {
-  padding-right: 2rem;
+  padding-right: 0;
 }
 #observablehq-sidebar > ol:first-of-type > li:first-child > a {
-  font-size: 0.9em;
+  font-size: 1em;
   line-height: 1.25;
+}
+#observablehq-sidebar-close {
+  position: fixed;
+  top: 50%;
+  left: calc(var(--observablehq-sidebar-width) - 1.75rem);
+  right: auto;
+  transform: translateY(-50%);
+  z-index: 5;
 }
 
 /* Headings sized to match the wider content area. clamp() lets the H1
