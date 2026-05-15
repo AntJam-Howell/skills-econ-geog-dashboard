@@ -68,8 +68,4 @@ This material is based upon work supported by the National Science Foundation un
 
 ## Contact
 
-**Anthony Howell**
-Associate Professor, School of Public Affairs
-Director, Center on Technology, Data & Society
-Arizona State University
-Email: Anthony.Howell@asu.edu
+Anthony Howell, School of Public Affairs, Arizona State University. Email: Anthony.Howell@asu.edu.
