@@ -16,7 +16,7 @@ Suggested citation: Howell, A. (2026). *Lightcast Skills Dashboard: County-Year 
 
 ### Acknowledgments
 
-Dashboard built and maintained by **Anthony Howell** (Arizona State University). This material is based upon work supported by the **National Science Foundation under Grant No. 2431853**. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the authors and do not necessarily reflect the views of the National Science Foundation.
+Dashboard built and maintained by **Anthony Howell** (Arizona State University). This material is based upon work supported by the **National Science Foundation under Grant No. 2431853**. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author and do not necessarily reflect the views of the National Science Foundation.
 
 ### Dashboard scope
 
