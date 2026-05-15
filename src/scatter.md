@@ -7,6 +7,11 @@ toc: false
 
 Pick any two metrics, a year, and optionally a focal county. Each dot is a county, sized by total postings. Hover for county name and values; click to open that county on the **County profiles** page. Highlight a focal county to see where it sits in the cloud, then toggle "Show similar counties" to surface its k nearest peers in this 2D space — useful both for bivariate analysis and for finding economic peers across the volume, composition, diversity, network, and complexity families.
 
+<div class="scatter-mobile-fallback">
+  The scatter chart is best viewed on a tablet or desktop.
+  <a href="./rankings">View Rankings &amp; trends →</a>
+</div>
+
 ```js
 import {METRICS, METRIC_BY_KEY, fmtFips, fmtMetric, metricSelect, makeInfoPopover} from "./components/utils.js";
 import {countySelector} from "./components/countySelector.js";
@@ -519,16 +524,11 @@ const scatterChart = Plot.plot({
   marks,
 });
 
-// Wrap the chart in a container so CSS can hide it on mobile (and show the
-// .scatter-mobile-fallback sibling instead). The fallback is hidden on
-// desktop by default; CSS toggles the pair at the 700px breakpoint.
-display(html`
-  <div class="scatter-chart-container">${scatterChart}</div>
-  <div class="scatter-mobile-fallback">
-    The scatter chart is best viewed on a tablet or desktop.
-    <a href="./rankings">View Rankings &amp; trends →</a>
-  </div>
-`);
+// Wrap the chart in a container so CSS can hide it on mobile. The
+// .scatter-mobile-fallback banner is rendered at the top of the page
+// (right under the intro paragraph) instead of here, so users see the
+// "best on desktop" notice before they scroll past the controls.
+display(html`<div class="scatter-chart-container">${scatterChart}</div>`);
 
 // Tap-to-show tooltip for touch-primary devices (e.g. tablets above 700px
 // where the chart still renders). Same AbortController pattern as the

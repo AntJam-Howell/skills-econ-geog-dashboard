@@ -432,6 +432,26 @@ h3.h3-flush { margin-top: 0; }
     line-height: 1.45;
   }
   .scatter-mobile-fallback a { font-weight: 600; }
+
+  /* Rankings table: hide state, FIPS, and total-postings columns so the
+   * county name + value pair fits on a phone without horizontal scroll.
+   * Column indices in the rendered <table>: 1=name, 2=state, 3=fips,
+   * 4=value, 5=postings. */
+  .rankings-table-card th:nth-child(2),
+  .rankings-table-card td:nth-child(2),
+  .rankings-table-card th:nth-child(3),
+  .rankings-table-card td:nth-child(3),
+  .rankings-table-card th:nth-child(5),
+  .rankings-table-card td:nth-child(5) {
+    display: none;
+  }
+  /* Let the county-name column take whatever width is left after the
+   * value column renders. */
+  .rankings-table-card td:first-child,
+  .rankings-table-card th:first-child {
+    white-space: normal;
+    word-break: break-word;
+  }
 }
 
 @media (max-width: 640px) {

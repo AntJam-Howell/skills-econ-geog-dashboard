@@ -97,9 +97,13 @@ const topRows = _filtered.sort(_cmp).slice(0, 25).map(r => ({
 ```
 
 <div class="grid grid-cols-2">
-  <div class="card">
+  <div class="card rankings-table-card">
     <h2>${direction === "highest" ? "Highest" : "Lowest"} ${metric.label}, ${year}${hasSuppression ? html`<span style="font-size:0.65em;font-weight:normal;opacity:0.7;"> (≥${suppressBelow.toLocaleString()} postings)</span>` : ""}</h2>
     ${Inputs.table(topRows, {
+      // On viewports <= 700px we hide the state/fips/postings columns via
+      // CSS (.rankings-table-card scoping) so the county name + value pair
+      // doesn't get scrolled off the right edge. The data is still in the
+      // row for desktop and for the order-by sort to remain stable.
       columns: ["name", "state", "fips", "value", "postings"],
       header: {
         name: "County",
@@ -135,19 +139,27 @@ const topRows = _filtered.sort(_cmp).slice(0, 25).map(r => ({
           );
         }
       }
+      // Mobile CSS collapses the 2-col grid to single column, so the
+      // histogram gets the full content width; halving it would leave it
+      // ~140 px wide on a phone. Branch the width calc to match.
+      const histW = width < 700
+        ? Math.min(width - 32, 600)
+        : Math.min(width / 2 - 40, 600);
       return Plot.plot({
-        width: Math.min(width / 2 - 40, 600),
-        height: 320,
-        marginLeft: 60,
-        marginBottom: 50,
+        width: histW,
+        height: width < 700 ? 260 : 320,
+        marginLeft: 50,
+        marginBottom: 46,
         x: {
           label: metric.label,
           type: metric.scale === "log" ? "log" : "linear",
           grid: true,
+          // Fewer x-ticks on narrow viewports so labels don't overlap.
+          ticks: width < 700 ? 5 : 8,
         },
         // Sqrt y-axis softens the long right tail without breaking on zero
         // (which a strict log scale would).
-        y: {label: "Number of counties (√ scale)", type: "sqrt", grid: true, ticks: 6},
+        y: {label: "Number of counties (√ scale)", type: "sqrt", grid: true, ticks: width < 700 ? 4 : 6},
         marks: [
           Plot.rectY(filtered, Plot.binX({y: "count"}, binOpts)),
           Plot.ruleY([0]),
