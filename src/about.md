@@ -140,4 +140,4 @@ The dashboard collapses the 9-code RUCC into a 4-tier scheme that is more legibl
 
 **Connecticut note:** Lightcast adopted the post-2022Q3 planning-region FIPS (09110–09190) for all years, retroactively. RUCC 2023 has also already adopted these FIPS, so every CT planning region appears in the source file with its own RUCC code.
 
-State-level placeholder FIPS (01999, 02999, etc., used by Lightcast for postings without a county assignment) and the retired Alaska FIPS 02261 (Valdez-Cordova, split 2019 into 02063 + 02066) are excluded from the dashboard panel. The retired Alaska FIPS has no RUCC entry, and the state-level placeholders cannot be mapped to a county polygon.
+State-level placeholder FIPS (01999, 02999, etc., used by Lightcast for postings without a county assignment) are excluded from the dashboard panel.
