@@ -127,7 +127,7 @@ The "Show suppressed counties" toggle on the map lets you see the underlying val
 
 ### County urbanicity classification (USDA RUCC 2023)
 
-The "Postings by metro tier" panel and the `rucc_2023` / `rucc_tier` columns come from the **USDA Economic Research Service Rural-Urban Continuum Codes 2023**, the canonical source for U.S. county urbanicity classification. Source: <https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/>. RUCC distinguishes nine categories of metropolitan and nonmetropolitan counties based on population size and adjacency to a metro area.
+The "Postings by metro tier" panel and the `rucc_tier` column come from the **USDA Economic Research Service Rural-Urban Continuum Codes 2023**, the canonical source for U.S. county urbanicity classification. Source: <https://www.ers.usda.gov/data-products/rural-urban-continuum-codes/>. RUCC distinguishes nine categories of metropolitan and nonmetropolitan counties based on population size and adjacency to a metro area.
 
 The dashboard collapses the 9-code RUCC into a 4-tier scheme that is more legible at a glance and still preserves the analytically meaningful distinctions:
 
@@ -140,4 +140,4 @@ The dashboard collapses the 9-code RUCC into a 4-tier scheme that is more legibl
 
 **Connecticut note:** Lightcast adopted the post-2022Q3 planning-region FIPS (09110–09190) for all years, retroactively. RUCC 2023 has also already adopted these FIPS, so every CT planning region appears in the source file with its own RUCC code.
 
-State-level placeholder FIPS (01999, 02999, etc., used by Lightcast for postings without a county assignment) and the retired Alaska FIPS 02261 (Valdez-Cordova, split 2019 into 02063 + 02066) remain NULL for `rucc_*` because RUCC has no entry for them. About 780 county-year rows out of 47,891 (1.6%) carry NULL RUCC; they are excluded from the urbanicity panel.
+State-level placeholder FIPS (01999, 02999, etc., used by Lightcast for postings without a county assignment) and the retired Alaska FIPS 02261 (Valdez-Cordova, split 2019 into 02063 + 02066) are excluded from the dashboard panel. The retired Alaska FIPS has no RUCC entry, and the state-level placeholders cannot be mapped to a county polygon.

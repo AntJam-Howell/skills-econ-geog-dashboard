@@ -189,15 +189,9 @@ const overviewTotals = Array.from(
   ([year, total]) => ({year, total})
 ).sort((a, b) => a.year - b.year);
 
-// Reassignment rule: NAICS 9999 (unclassified) postings get rolled into
-// Private sector. University (6113-6117), Federal lab (5417, 9271), and
-// Government (92xx) are all well-defined NAICS classes, so an unclassified
-// posting is almost certainly a private-sector employer Lightcast couldn't
-// tag. Staffing firms (NAICS 5613 + company_is_staffing) are excluded
-// because they over-represent counties with single big agencies.
 const overviewByEmployer = Array.from(
   d3.rollup(panel, v => ({
-    "Private sector": d3.sum(v, r => (r.n_corporate ?? 0) + (r.n_unclassified ?? 0)),
+    "Private sector": d3.sum(v, r => r.n_corporate),
     "University":     d3.sum(v, r => r.n_university),
     "Federal lab":    d3.sum(v, r => r.n_federal_lab),
     "Government":     d3.sum(v, r => r.n_government),
@@ -218,31 +212,6 @@ const overviewByUrbanicity = Array.from(
   ),
   ([year, sums]) => ({year, ...sums})
 ).sort((a, b) => a.year - b.year);
-
-// Coverage stats for the popovers: how many postings are in unassigned-FIPS
-// (XX999, no county) and in staffing firms — both excluded from their
-// respective breakdowns. Reported for 2010 (start) and 2024 (end of panel).
-const coverageStats = Array.from(
-  d3.rollup(
-    panel.filter(r => r.year === 2010 || r.year === 2024),
-    v => ({
-      unassigned_n: d3.sum(v.filter(r => r.county.endsWith("999")), r => r.total_postings),
-      staffing_n:   d3.sum(v, r => r.n_staffing),
-      total_n:      d3.sum(v, r => r.total_postings),
-    }),
-    r => r.year
-  ),
-  ([year, sums]) => ({year, ...sums})
-).sort((a, b) => a.year - b.year);
-const cov = Object.fromEntries(coverageStats.map(r => [r.year, {
-  unassigned: r.unassigned_n,
-  staffing: r.staffing_n,
-  total: r.total_n,
-  unassignedPct: 100 * r.unassigned_n / Math.max(1, r.total_n),
-  staffingPct: 100 * r.staffing_n / Math.max(1, r.total_n),
-}]));
-const fmtPct = v => v.toFixed(1) + "%";
-const fmtN = v => v.toLocaleString();
 
 function pivot(rows, valueCols, categoryName = "category") {
   const out = [];
@@ -375,25 +344,16 @@ const urbanicityInfo = makeOverviewInfo(`
     <b>Nonmetro adjacent</b> (RUCC 4, 6, 8, ~1,060 nonmetro counties adjacent to a metro), and
     <b>Rural</b> (RUCC 5, 7, 9, ~920 nonmetro counties not adjacent).
     Y-axis is log scale so all four tiers stay visible across the 2017–2018 structural break — each gridline is 10× the previous.
-    <br><br>
-    State-level placeholder FIPS (XX999 — postings without a county assignment) excluded:
-    <b>${fmtPct(cov[2010]?.unassignedPct ?? 0)}</b> of 2010 postings (${fmtN(cov[2010]?.unassigned ?? 0)} of ${fmtN(cov[2010]?.total ?? 0)}) and
-    <b>${fmtPct(cov[2024]?.unassignedPct ?? 0)}</b> of 2024 postings (${fmtN(cov[2024]?.unassigned ?? 0)} of ${fmtN(cov[2024]?.total ?? 0)}) fall into this category.
   </span>
 `);
 const employerInfo = makeOverviewInfo(`
   <b>Postings by employer type</b><br>
   <span style="opacity:0.85">
-    Total postings split by employer's NAICS-4 classification:
+    Total postings split into four mutually exclusive categories:
+    <b>Private sector</b> (all corporate postings),
     <b>University</b> (NAICS 6113–6117),
-    <b>Federal lab</b> (NAICS 5417 + 9271),
-    <b>Government</b> (NAICS 92xx). The remaining postings — including
-    NAICS 9999 (unclassified) — are <b>private sector</b>.
-    <br><br>
-    <b>Excluded:</b> Staffing firms (NAICS 5613 + the
-    <code>company_is_staffing</code> flag) over-represent counties with single
-    big agencies. <b>${fmtPct(cov[2010]?.staffingPct ?? 0)}</b> of 2010 postings
-    and <b>${fmtPct(cov[2024]?.staffingPct ?? 0)}</b> of 2024 postings.
+    <b>Federal lab</b> (NAICS 5417 + 9271), and
+    <b>Government</b> (NAICS 92xx). The four categories sum to the national total.
   </span>
 `);
 const yoyInfo = makeOverviewInfo(`
