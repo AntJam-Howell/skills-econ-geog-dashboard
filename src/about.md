@@ -62,15 +62,6 @@ Where the county's portfolio of local specializations sits in the global skill-r
 - **Share software** — share classified as named software (Excel, AWS, Salesforce).
 - **Share common, soft** — share classified as common or soft (communication, teamwork, problem-solving).
 
-### Work mode (county profile only)
-
-The Lightcast work-mode tags, filtered out of the map and County comparisons dropdowns and shown on County profiles only:
-
-- **Share remote postings** — share of postings tagged remote.
-- **Share hybrid postings** — share tagged hybrid.
-
-Lightcast's structured remote and hybrid tagging began in 2018. Before then, remote and hybrid status were inferred from keyword matches and were unreliable. **Share remote and Share hybrid are NULL for all years before 2018** in the panel, so sparklines render the missing years as gaps.
-
 ## Common workflows
 
 ### Pick a starting page based on the question
