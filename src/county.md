@@ -381,14 +381,14 @@ display(html`
   <div class="grid grid-cols-3">
     <div class="card card-tight">
       ${renderPostingVolumeRow()}
-      ${renderFamily("Skill type mix",              grouped.get("Skill type mix"), {exclude: ["share_software"]})}
+      ${renderFamily("Skill type mix",              grouped.get("Volume"), {exclude: ["total_postings", "share_software"]})}
     </div>
     <div class="card card-tight">
-      ${renderFamily("Diversity and concentration", grouped.get("Diversity and concentration"), {exclude: ["mean_skills_per_posting", "n_distinct_skills"]})}
-      ${renderFamily("Skill space position",        grouped.get("Skill space position"), {exclude: ["avg_centrality"]})}
+      ${renderFamily("Diversity and concentration", grouped.get("Skill Specialization"), {exclude: ["mean_skills_per_posting", "n_distinct_skills"]})}
+      ${renderFamily("Skill space position",        grouped.get("Network position"), {exclude: ["avg_centrality"]})}
     </div>
     <div class="card card-tight">
-      ${renderFamily("Complexity and sophistication", grouped.get("Complexity and sophistication"))}
+      ${renderFamily("Complexity and sophistication", grouped.get("Economic complexity and sophistication"))}
     </div>
   </div>
 `);
