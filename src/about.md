@@ -10,7 +10,7 @@ This dashboard visualizes a county-year aggregate panel of U.S. labor and skill 
 
 Every metric in the dashboard has an **ⓘ** icon next to it; click it for a one-paragraph plain-language definition. For additional context on these variable definitions and technical background on how each measure is developed and used, see the accompanying working paper:
 
-> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography of U.S. Skills: specialization, relatedness, and complexity.* Working paper, SSRN. <https://ssrn.com/abstract=XXXXXXX>
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography dataset of labor demand and skill specialization, diversity and complexity.* Working paper, SSRN. <https://ssrn.com/abstract=XXXXXXX>
 
 ## Dashboard scope
 
