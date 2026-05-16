@@ -326,19 +326,11 @@ function computeLoess(pts, bandwidth = 0.3) {
   return out;
 }
 
-// Fit-choice rules. Default is LOESS; a small allow-list of pairs that
-// scale approximately linearly (volume × specialization counts, where
-// total skills grow roughly in proportion to total postings) uses a
-// linear regression instead. Power-law pair stays in the linear set
-// but with log-log axes so the slope recovers the exponent β ≈ 0.6–0.7.
+// All pairs use a LOESS smoother (bandwidth 0.3 in the transformed axis
+// space). The total_postings × n_rca_skills pair keeps its log-log axis
+// override so the smoother is fit on log-transformed values, matching the
+// manuscript figure.
 const xKey = xMetric.key, yKey = yMetric.key;
-const pairKey = [xKey, yKey].sort().join("|");
-const LINEAR_PAIRS = new Set([
-  ["total_postings", "n_rca_skills"].sort().join("|"),
-  ["total_postings", "mean_skills_per_posting"].sort().join("|"),
-  ["n_distinct_skills", "n_rca_skills"].sort().join("|"),
-]);
-const isLinearPair = LINEAR_PAIRS.has(pairKey);
 const isPowerLawPair =
   (xKey === "total_postings" && yKey === "n_rca_skills") ||
   (xKey === "n_rca_skills" && yKey === "total_postings");
@@ -346,9 +338,7 @@ const isPowerLawPair =
 const xLog = xMetric.scale === "log" || (isPowerLawPair && xKey === "n_rca_skills");
 const yLog = yMetric.scale === "log" || (isPowerLawPair && yKey === "n_rca_skills");
 
-const fitMark = isLinearPair
-  ? Plot.linearRegressionY(points, {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 1.5})
-  : Plot.line(computeLoess(points, 0.3), {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2});
+const fitMark = Plot.line(computeLoess(points, 0.3), {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2});
 
 // Residuals = actual y minus fit-predicted y, computed in the SAME space
 // the regression operates in (log-transformed when an axis is log) so the
@@ -400,7 +390,7 @@ function computeResiduals(pts, fitKind, xLog, yLog) {
 }
 
 const dotData = residualMode
-  ? computeResiduals(points, isLinearPair ? "linear" : "loess", xLog, yLog)
+  ? computeResiduals(points, "loess", xLog, yLog)
   : points;
 
 // Resolve focal county and (optionally) its k-NN peer set in this 2D view.
@@ -598,7 +588,7 @@ if (matchMedia("(hover: none)").matches) {
     <b>${points.length.toLocaleString()}</b> counties shown
     (${year}${stateFilter !== "All states" ? html`, <b>${stateFilter}</b> only` : ""},
     total postings ≥ ${minPostings.toLocaleString()}).
-    Spearman ρ = <b>${rho.toFixed(3)}</b> (${isLinearPair ? "linear fit" : "loess fit"}).${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above fitted trend; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
+    Spearman ρ = <b>${rho.toFixed(3)}</b> (LOESS fit, bandwidth 0.3).${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above fitted trend; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
   </p>
 </div>
 
@@ -728,10 +718,9 @@ display(html`
     <div class="card">
       <h3 class="h3-flush">Bivariate analyses</h3>
       <p class="muted-note-strong" style="margin: 0 0 0.6rem 0; font-size: 0.92em;">
-        Pick a pair of metrics; explore the cloud and the fitted trend
-        (linear for volume-vs-specialization counts, LOESS otherwise). The
-        residual coloring (default ON) highlights counties above versus below
-        the trend, usually the policy-relevant outliers.
+        Pick a pair of metrics; explore the cloud and the fitted LOESS
+        trend. The residual coloring (default ON) highlights counties above
+        versus below the trend, usually the policy-relevant outliers.
       </p>
       <ol class="feature-list">
         <li>
