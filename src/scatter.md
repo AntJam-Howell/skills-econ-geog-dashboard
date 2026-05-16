@@ -188,6 +188,7 @@ display(html`
 // end in 999 since the Census reserves that suffix for "unknown".
 const wx = xMetric.winsorize === true;
 const wy = yMetric.winsorize === true;
+const needsWinsor = wx || wy;
 
 // Year-restricted set with both axes non-null and state-level FIPS dropped.
 // Bounds for winsorization come from this set; the displayed point set
@@ -574,7 +575,7 @@ if (matchMedia("(hover: none)").matches) {
     <b>${points.length.toLocaleString()}</b> counties shown
     (${year}${stateFilter !== "All states" ? html`, <b>${stateFilter}</b> only` : ""},
     total postings ≥ ${minPostings.toLocaleString()}).
-    Pearson r = <b>${r.toFixed(3)}</b>.${needsWinsor ? html`<span class="muted-note"> Winsorized at 1%/99% within ${year}: ${[wx && xMetric.label, wy && yMetric.label].filter(Boolean).join(", ")}.</span>` : ""}${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above regression line; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
+    Pearson r = <b>${r.toFixed(3)}</b>.${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above regression line; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
   </p>
 </div>
 

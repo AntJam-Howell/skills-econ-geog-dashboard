@@ -38,8 +38,6 @@ The dashboard reads a county-year aggregate panel covering 3,194 U.S. counties f
 
 The panel, its codebook, and the full construction pipeline live in the companion repository [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data).
 
-The Connecticut planning-region remap (historic 8 counties to the new 9 planning regions, effective June 2022) is applied throughout. State-level placeholder FIPS for postings without a county assignment are excluded.
-
 ---
 
 ## License
