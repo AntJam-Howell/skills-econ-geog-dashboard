@@ -103,8 +103,9 @@ const countyRows = panel
   .filter(r => r.county === dataFips)
   .sort((a, b) => a.year - b.year);
 
-// Derived series for share_remote_or_hybrid (NULL pre-2018 because both
-// inputs are NULL until Lightcast's structured work-mode tagging began).
+// Derived series for share_remote_or_hybrid. Values are populated for all
+// years but are very small before 2018, when Lightcast's structured
+// work-mode tagging had not yet begun.
 const shareRorHSeries = countyRows.map(r => {
   const rem = r.share_remote, hyb = r.share_hybrid;
   if (rem == null && hyb == null) return {year: r.year, value: null};

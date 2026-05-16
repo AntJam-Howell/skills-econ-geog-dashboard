@@ -6,8 +6,8 @@ n_corporate,int,"Postings from private-sector employers (corporate, staffing, an
 n_university,int,Postings from NAICS 6112-6117 (universities/colleges),C. Labor demand: posting counts by employer type
 n_federal_lab,int,"Postings from NAICS 5417, 9271 (scientific R&D, space research)",C. Labor demand: posting counts by employer type
 n_government,int,Postings from NAICS 92xx (all government),C. Labor demand: posting counts by employer type
-share_remote,"float [0,1]",Fraction of postings tagged remote (NULL pre-2018),D. Labor demand: work mode
-share_hybrid,"float [0,1]",Fraction of postings tagged hybrid (NULL pre-2018),D. Labor demand: work mode
+share_remote,"float [0,1]",Fraction of postings tagged remote (very small before 2018),D. Labor demand: work mode
+share_hybrid,"float [0,1]",Fraction of postings tagged hybrid (very small before 2018),D. Labor demand: work mode
 share_specialized,"float [0,1]",Fraction of total skill mentions that are specialized,E. Skill demand: composition by skill type
 share_software,"float [0,1]",Fraction of total skill mentions that are software,E. Skill demand: composition by skill type
 share_common,"float [0,1]",Fraction of total skill mentions that are common (soft),E. Skill demand: composition by skill type

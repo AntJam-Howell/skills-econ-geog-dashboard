@@ -41,8 +41,9 @@ const states   = topojson.mesh(usTopo, usTopo.objects.states, (a, b) => a !== b)
 // Grouped metric selector (<optgroup> per family) + info popover.
 // Default opens on Volume: Total postings.
 // Work mode (share_remote/share_hybrid) is excluded from the choropleth
-// dropdown — those metrics are noisy at the county level (NULL pre-2018,
-// small-county jitter post-2018). They stay in METRICS so the county-
+// dropdown because those metrics are noisy at the county level (very small
+// values pre-2018, small-county jitter post-2018). They stay in METRICS so
+// the county-
 // profile sparklines and the Compare-counties scatter can use them.
 const metricEl = metricSelect(
   METRIC_BY_KEY.get("n_rca_skills"),
