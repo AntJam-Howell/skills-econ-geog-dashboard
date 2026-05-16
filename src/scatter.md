@@ -93,7 +93,7 @@ const stateFilterEl = Inputs.select(["All states", ...allStates], {
 const stateFilter = Generators.input(stateFilterEl);
 
 const residualModeEl = Inputs.toggle({
-  label: "Color by residual (above/below regression line)",
+  label: "Color by residual (above/below fitted trend)",
   value: true,
 });
 const residualMode = Generators.input(residualModeEl);
@@ -188,7 +188,6 @@ display(html`
 // end in 999 since the Census reserves that suffix for "unknown".
 const wx = xMetric.winsorize === true;
 const wy = yMetric.winsorize === true;
-const needsWinsor = wx || wy;
 
 // Year-restricted set with both axes non-null and state-level FIPS dropped.
 // Bounds for winsorization come from this set; the displayed point set
@@ -233,23 +232,44 @@ const points = stateFilter === "All states"
 ```
 
 ```js
-// Compute Pearson correlation for the displayed sample
-function pearson(arr, fx, fy) {
-  let n = 0, mx = 0, my = 0, sxx = 0, syy = 0, sxy = 0;
+// Spearman rank correlation. Robust to monotonic nonlinearities, so the
+// reported association stays meaningful whether the fit is linear or LOESS.
+// Average ranks are used to handle ties.
+function spearman(arr, fx, fy) {
+  const pairs = [];
   for (const d of arr) {
     const x = fx(d), y = fy(d);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-    n++;
-    const dx = x - mx, dy = y - my;
-    mx += dx / n; my += dy / n;
-    sxx += dx * (x - mx);
-    syy += dy * (y - my);
-    sxy += dx * (y - my);
+    if (Number.isFinite(x) && Number.isFinite(y)) pairs.push([x, y]);
   }
-  return n > 1 ? sxy / Math.sqrt(sxx * syy) : NaN;
+  const n = pairs.length;
+  if (n < 2) return NaN;
+  const rankOf = (vals) => {
+    const idx = vals.map((v, i) => [v, i]).sort((a, b) => a[0] - b[0]);
+    const ranks = new Array(n);
+    let i = 0;
+    while (i < n) {
+      let j = i;
+      while (j + 1 < n && idx[j + 1][0] === idx[i][0]) j++;
+      const avg = (i + j) / 2 + 1;
+      for (let k = i; k <= j; k++) ranks[idx[k][1]] = avg;
+      i = j + 1;
+    }
+    return ranks;
+  };
+  const rx = rankOf(pairs.map(p => p[0]));
+  const ry = rankOf(pairs.map(p => p[1]));
+  let mx = 0, my = 0;
+  for (let i = 0; i < n; i++) { mx += rx[i]; my += ry[i]; }
+  mx /= n; my /= n;
+  let sxx = 0, syy = 0, sxy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = rx[i] - mx, dy = ry[i] - my;
+    sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+  }
+  return (sxx > 0 && syy > 0) ? sxy / Math.sqrt(sxx * syy) : NaN;
 }
 
-const r = pearson(points, d => d.x, d => d.y);
+const rho = spearman(points, d => d.x, d => d.y);
 ```
 
 ```js
@@ -306,26 +326,29 @@ function computeLoess(pts, bandwidth = 0.3) {
   return out;
 }
 
-// Pair-specific overrides for axis scales and regression type:
-//   - Total postings vs n_rca_skills: power-law relationship → force y
-//     onto log scale (n_rca_skills is otherwise linear). Linear regression
-//     on log-log axes recovers the power-law exponent.
-//   - Skill density vs Skill coherence: nonlinear L-shape → swap linear
-//     regression for LOESS so the fit captures the curvature.
+// Fit-choice rules. Default is LOESS; a small allow-list of pairs that
+// scale approximately linearly (volume × specialization counts, where
+// total skills grow roughly in proportion to total postings) uses a
+// linear regression instead. Power-law pair stays in the linear set
+// but with log-log axes so the slope recovers the exponent β ≈ 0.6–0.7.
 const xKey = xMetric.key, yKey = yMetric.key;
+const pairKey = [xKey, yKey].sort().join("|");
+const LINEAR_PAIRS = new Set([
+  ["total_postings", "n_rca_skills"].sort().join("|"),
+  ["total_postings", "mean_skills_per_posting"].sort().join("|"),
+  ["n_distinct_skills", "n_rca_skills"].sort().join("|"),
+]);
+const isLinearPair = LINEAR_PAIRS.has(pairKey);
 const isPowerLawPair =
   (xKey === "total_postings" && yKey === "n_rca_skills") ||
   (xKey === "n_rca_skills" && yKey === "total_postings");
-const isLoessPair =
-  (xKey === "skill_density" && yKey === "skill_coherence") ||
-  (xKey === "skill_coherence" && yKey === "skill_density");
 
 const xLog = xMetric.scale === "log" || (isPowerLawPair && xKey === "n_rca_skills");
 const yLog = yMetric.scale === "log" || (isPowerLawPair && yKey === "n_rca_skills");
 
-const fitMark = isLoessPair
-  ? Plot.line(computeLoess(points, 0.3), {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2})
-  : Plot.linearRegressionY(points, {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 1.5});
+const fitMark = isLinearPair
+  ? Plot.linearRegressionY(points, {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 1.5})
+  : Plot.line(computeLoess(points, 0.3), {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2});
 
 // Residuals = actual y minus fit-predicted y, computed in the SAME space
 // the regression operates in (log-transformed when an axis is log) so the
@@ -377,7 +400,7 @@ function computeResiduals(pts, fitKind, xLog, yLog) {
 }
 
 const dotData = residualMode
-  ? computeResiduals(points, isLoessPair ? "loess" : "linear", xLog, yLog)
+  ? computeResiduals(points, isLinearPair ? "linear" : "loess", xLog, yLog)
   : points;
 
 // Resolve focal county and (optionally) its k-NN peer set in this 2D view.
@@ -432,7 +455,7 @@ marks.push(
       : (residualMode ? d => d.residual >= 0 ? "#1d4ed8" : "#b91c1c" : "#075985"),
     strokeOpacity: focal ? 0.6 : 0.7,
     strokeWidth: 0.5,
-    title: d => `${d.name}, ${d.state} (${d.fips})\n${xMetric.label}: ${fmtMetric(d.x, xMetric)}\n${yMetric.label}: ${fmtMetric(d.y, yMetric)}\nTotal postings: ${d.n.toLocaleString()}${residualMode && !focal ? `\nResidual: ${d.residual >= 0 ? "above" : "below"} the regression line` : ""}`,
+    title: d => `${d.name}, ${d.state} (${d.fips})\n${xMetric.label}: ${fmtMetric(d.x, xMetric)}\n${yMetric.label}: ${fmtMetric(d.y, yMetric)}\nTotal postings: ${d.n.toLocaleString()}${residualMode && !focal ? `\nResidual: ${d.residual >= 0 ? "above" : "below"} the fitted trend` : ""}`,
     href: d => `./county?fips=${d.fips}`,
     target: "_self",
   }),
@@ -575,7 +598,7 @@ if (matchMedia("(hover: none)").matches) {
     <b>${points.length.toLocaleString()}</b> counties shown
     (${year}${stateFilter !== "All states" ? html`, <b>${stateFilter}</b> only` : ""},
     total postings ≥ ${minPostings.toLocaleString()}).
-    Pearson r = <b>${r.toFixed(3)}</b>.${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above regression line; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
+    Spearman ρ = <b>${rho.toFixed(3)}</b> (${isLinearPair ? "linear fit" : "loess fit"}).${residualMode && !focalToggle ? html`<span class="muted-note"> <span style="color:#60a5fa">Blue</span> = above fitted trend; <span style="color:#f87171">red</span> = below.</span>` : ""}${focalToggle ? html`<span class="muted-note"> Focal: <b style="color:#fbbf24">${cMeta[focalFipsRaw]?.name ?? "?"}, ${cMeta[focalFipsRaw]?.state ?? "?"}</b>.${similarToggle ? html` Similar counties: top <b style="color:#2dd4bf">${k}</b> by Euclidean distance in this 2D view.` : ""}</span>` : ""}
   </p>
 </div>
 
@@ -705,9 +728,10 @@ display(html`
     <div class="card">
       <h3 class="h3-flush">Bivariate analyses</h3>
       <p class="muted-note-strong" style="margin: 0 0 0.6rem 0; font-size: 0.92em;">
-        Pick a pair of metrics; explore the cloud and the regression fit. The
+        Pick a pair of metrics; explore the cloud and the fitted trend
+        (linear for volume-vs-specialization counts, LOESS otherwise). The
         residual coloring (default ON) highlights counties above versus below
-        the fit line — usually the policy-relevant outliers.
+        the trend, usually the policy-relevant outliers.
       </p>
       <ol class="feature-list">
         <li>
