@@ -1,58 +1,58 @@
-# Economic Geography of U.S. Skill Specialization and Complexity
+# Geography of Skill Specialization and Complexity
 
-An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010-2024.
+An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010–2024. The panel covers 3,194 counties across 15 years (47,891 county-year observations), exposing 19 core measures organized into five metric families: skill specialization, economic complexity, network position, demand volume, and work mode.
 
-**Live dashboard:** https://skills-econ-geog.netlify.app/
+The dashboard is designed for researchers, students, and policy users who want to explore the panel without writing code. Every metric in the dashboard has an ⓘ icon next to it; click it for a one-paragraph plain-language definition. For the full variable names, definitions, and background on how each measure is developed and used, see the accompanying working paper:
 
-**Companion dataset:** [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) (the public-release panel that this dashboard visualizes)
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography of U.S. Skills: specialization, relatedness, and complexity.* Working paper, SSRN. https://ssrn.com/abstract=XXXXXXX
+
+**Live dashboard**
+
+> [https://skills-econ-geog.netlify.app/](https://skills-econ-geog.netlify.app/)
+
+**Companion data repository**
+
+> The complete 201-variable county-year panel that this dashboard visualizes, with the full codebook, data dictionary, and reproducible construction pipeline: [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)
+
+Source code is released under the MIT License (see `LICENSE`). The underlying data is released separately under CC BY 4.0 in the companion data repository.
 
 ---
 
-## What the dashboard shows
+## What the dashboard offers
 
-Five pages, organized by the question they answer:
+Four analytical pages plus a documentation page:
 
-| Page | Question it answers |
+| Page | What it does |
 |---|---|
-| **Spatial visualization** (`/`) | Where in the U.S. is a given measure of labor or skill demand concentrated, and how has the geographic pattern shifted over time? Choropleth map with year slider and Play animation. |
-| **Rankings & trends** (`/rankings`) | Which counties lead and lag on a given measure in a given year, and how is that measure distributed nationally? Ranked table, distribution histogram, and four national-context time series. |
-| **County comparisons** (`/scatter`) | How do counties co-vary on any two measures? Bivariate scatter with a focal county and its k-nearest neighbors, year selector, and minimum-postings filter. |
-| **County profiles** (`/county`) | What is the 15-year trajectory of a single county across the full battery of measures? Family-grouped sparklines plus composition stacks for employer entity, work mode, and skill type. |
-| **How to use the dashboard** (`/about`) | How are the measures defined, and what workflows does the dashboard support? Glossary of measures, four end-to-end workflows, and methodology notes. |
-
-The five metric families on the map, rankings, profile, and scatter pages are:
-
-- **Skill Specialization** — local specializations (RCA > 1 breadth), mean skills per posting, distinct skills, skill concentration HHI
-- **Economic complexity and sophistication** — ECI, fitness, entropy, average ubiquity
-- **Network position** — Balland skill density, Neffke skill coherence, average centrality
-- **Volume** — total postings, share specialized / software / common
-- **Work mode** (county profile only) — share remote, hybrid, on-site
-
-See the **How to use the dashboard** page for variable definitions.
+| **Spatial visualization** | County-level choropleth map of any panel metric, with a year slider and Play button to animate 2010–2024. Low-volume county-years are hatched. Default landing metric: local specializations. |
+| **Rankings & trends** | Top-25 ranked table for the selected metric and year, distribution histogram, and four national-context time series. |
+| **County comparisons** | Bivariate scatter of any two metrics for a selected year, with a focal county and its k-nearest peers highlighted. Optional state filter and minimum-postings threshold. |
+| **County profiles** | 15-year trajectory of a single county across the full battery of measures, with family-grouped sparklines and composition stacks for employer entity, work mode, and skill type. |
+| **How to use the dashboard** | Layered usage guide: dashboard scope, four numbered workflows, and methodology notes. |
 
 ---
 
 ## Data source
 
-The dashboard visualizes a county-year aggregate panel constructed from 433.6 million Lightcast (Burning Glass) job postings spanning 2010-2024, covering 3,194 U.S. counties and 47,126 county-year observations.
+The dashboard reads a county-year aggregate panel covering 3,194 U.S. counties from 2010 to 2024. The released panel is built from the underlying raw Lightcast (formerly Burning Glass Technologies) job-posting micro data: 929 GB across 22,967 gzipped CSV shards, 433.6 million postings, 2010–2024. The micro data are used under an academic license. The released county-year aggregates are derived statistics computed from those postings, not the postings themselves.
 
-The pipeline that produces the panel, the codebook, and the full methodological documentation live in the companion repository **[skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)**.
+The panel, its codebook, and the full construction pipeline live in the companion repository [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data).
 
----
-
-## Citation
-
-If you use this dashboard, please cite:
-
-> Howell, Anthony (2026). *Economic Geography of Skill Specialization and Complexity: an interactive dashboard* [Software]. https://github.com/AntJam-Howell/skills-econ-geog-dashboard. Zenodo DOI to be assigned.
+The Connecticut planning-region remap (historic 8 counties to the new 9 planning regions, effective June 2022) is applied throughout. State-level placeholder FIPS for postings without a county assignment are excluded.
 
 ---
 
 ## License
 
-The dashboard source code is released under the **MIT License**. See [`LICENSE`](LICENSE) for the full text.
+Dashboard source code is released under the **MIT License**. See [`LICENSE`](LICENSE) for the full text.
 
 The underlying data is released separately under **CC BY 4.0** in the [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data) repository.
+
+---
+
+## Attribution
+
+Dashboard built and maintained by Anthony Howell. Any errors are my own; please submit a [GitHub issue](https://github.com/AntJam-Howell/skills-econ-geog-dashboard/issues) for any errors or suggestions.
 
 ---
 
@@ -64,4 +64,8 @@ This material is based upon work supported by the National Science Foundation un
 
 ## Contact
 
-Anthony Howell, School of Public Affairs, Arizona State University. Email: Anthony.Howell@asu.edu.
+**Anthony Howell**
+Associate Professor, School of Public Affairs
+Director, Center on Technology, Data & Society
+Arizona State University
+Email: Anthony.Howell@asu.edu
