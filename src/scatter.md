@@ -338,7 +338,22 @@ const isPowerLawPair =
 const xLog = xMetric.scale === "log" || (isPowerLawPair && xKey === "n_rca_skills");
 const yLog = yMetric.scale === "log" || (isPowerLawPair && yKey === "n_rca_skills");
 
-const fitMark = Plot.line(computeLoess(points, 0.3), {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2});
+// Fit LOESS in the transformed axis space (log on whichever axes are log),
+// then invert-transform back to raw (x, y) so Plot lays the curve out
+// correctly. Critical that this uses the SAME transformation as
+// computeResiduals below — otherwise the rendered curve and the residual
+// sign disagree on log axes, and dots end up colored against a line they
+// don't actually sit on.
+const fitMark = (() => {
+  const tf = (v, isLog) => isLog ? (v > 0 ? Math.log10(v) : NaN) : Number(v);
+  const inv = (v, isLog) => isLog ? Math.pow(10, v) : v;
+  const tfPts = points
+    .map(d => ({x: tf(d.x, xLog), y: tf(d.y, yLog)}))
+    .filter(p => Number.isFinite(p.x) && Number.isFinite(p.y));
+  const tfCurve = computeLoess(tfPts, 0.3);
+  const rawCurve = tfCurve.map(p => ({x: inv(p.x, xLog), y: inv(p.y, yLog)}));
+  return Plot.line(rawCurve, {x: "x", y: "y", stroke: "#dc2626", strokeWidth: 2});
+})();
 
 // Residuals = actual y minus fit-predicted y, computed in the SAME space
 // the regression operates in (log-transformed when an axis is log) so the
