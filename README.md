@@ -1,6 +1,6 @@
 # Geography of Skill Specialization and Complexity
 
-An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010–2024. The panel covers 3,194 counties across 15 years (47,126 county-year observations), exposing 19 core measures organized into five metric families: skill specialization, economic complexity, network position, demand volume, and work mode.
+An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010–2024. The panel covers 3,194 counties across 15 years (47,126 county-year observations), exposing 19 core measures organized into four groupings: skill specialization, economic complexity, network position, and overall employer demand volume.
 
 The dashboard is designed for researchers, students, and policy users who want to explore the panel without writing code. Every metric in the dashboard has an ⓘ icon next to it; click it for a one-paragraph plain-language definition. For the full variable names, definitions, and background on how each measure is developed and used, see the accompanying working paper:
 
