@@ -12,6 +12,10 @@ Every metric in the dashboard has an **ⓘ** icon next to it; click it for a one
 
 > Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography dataset of labor demand and skill specialization, diversity and complexity.* Working paper, SSRN. <https://ssrn.com/abstract=XXXXXXX>
 
+To cite the underlying dataset:
+
+> Howell, A. (2026). *A U.S. county panel of skill specialization, relatedness, and complexity, across employer entity type* [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.20330086>
+
 ## Dashboard scope
 
 The dashboard exposes four analytical pages:

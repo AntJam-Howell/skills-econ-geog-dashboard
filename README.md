@@ -14,6 +14,10 @@ The dashboard is designed for researchers, students, and policy users who want t
 
 > The complete 201-variable county-year panel that this dashboard visualizes, with the full codebook, data dictionary, and reproducible construction pipeline: [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data)
 
+**Data citation**
+
+> Howell, A. (2026). *A U.S. county panel of skill specialization, relatedness, and complexity, across employer entity type* [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.20330086>
+
 Source code is released under the MIT License (see `LICENSE`). The underlying data is released separately under CC BY 4.0 in the companion data repository.
 
 ---
