@@ -1,6 +1,6 @@
 # Geography of Skill Specialization and Complexity
 
-An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010–2024. The panel covers 3,194 counties across 15 years (47,126 county-year observations), exposing 19 core measures organized into four groupings: skill specialization, economic complexity, network position, and overall employer demand volume.  The dashboard is designed for researchers, students, and policy users who want to explore the panel without writing code. Every metric in the dashboard has an ⓘ icon next to it; click it for a one-paragraph plain-language definition. 
+An open-access, interactive dashboard for exploring a U.S. county-year panel of labor and skill demand, 2010–2024. The panel covers 3,194 counties across 15 years (47,891 county-year observations), exposing 19 core measures organized into four groupings: skill specialization, economic complexity, network position, and overall employer demand volume.  The dashboard is designed for researchers, students, and policy users who want to explore the panel without writing code. Every metric in the dashboard has an ⓘ icon next to it; click it for a one-paragraph plain-language definition. 
 
 **Live dashboard**
 
@@ -18,7 +18,7 @@ An open-access, interactive dashboard for exploring a U.S. county-year panel of 
 
 For the key variable definitions and background on how each measure is developed and used in the literature, see the accompanying working paper:
 
-> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). Economic geography dataset of labor demand and skill specialization, diversity and complexity. Working paper, SSRN. 
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). An economic geography dataset of U.S. skill specialization, relatedness, and complexity. Working paper, SSRN. 
 
 Source code is released under the MIT License (see `LICENSE`). The underlying data is released separately under CC BY 4.0 in the companion data repository.
 

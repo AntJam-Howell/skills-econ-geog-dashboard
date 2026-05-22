@@ -6,7 +6,7 @@ title: How to use the dashboard
 
 ## About
 
-This dashboard visualizes a county-year aggregate panel of U.S. labor and skill demand covering 3,194 counties from 2010 to 2024 (47,126 county-year observations), exposing 19 core measures organized into five metric families. Access to the complete 201-variable panel, which includes the full suite of economic geography skill-based measures by county and by county × entity type, along with the codebook and the reproducible construction pipeline, lives in the companion repository [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data).
+This dashboard visualizes a county-year aggregate panel of U.S. labor and skill demand covering 3,194 counties from 2010 to 2024 (47,891 county-year observations), exposing 19 core measures organized into five metric families. Access to the complete 201-variable panel, which includes the full suite of economic geography skill-based measures by county and by county × entity type, along with the codebook and the reproducible construction pipeline, lives in the companion repository [skills-econ-geog-data](https://github.com/AntJam-Howell/skills-econ-geog-data).
 
 Every metric in the dashboard has an **ⓘ** icon next to it; click it for a one-paragraph plain-language definition. For additional context on these variable definitions and technical background on how each measure is developed and used, see the accompanying working paper:
 
