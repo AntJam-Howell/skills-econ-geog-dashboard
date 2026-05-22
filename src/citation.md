@@ -8,7 +8,7 @@ If you use this dashboard, the underlying dataset, or the methodology in publish
 
 ## How to cite the dashboard
 
-> Howell, A. (2026). *Geography of Skill Specialization and Complexity* [Software]. Zenodo. [PLACEHOLDER: dashboard Zenodo DOI — fill after manual deposit]
+> Howell, A. (2026). *Geography of Skill Specialization and Complexity* [Software]. Zenodo. <https://doi.org/10.5281/zenodo.20337193>
 
 ## How to cite the dataset
 
@@ -18,7 +18,7 @@ To cite a specific version, use the v1.0.0 DOI: <https://doi.org/10.5281/zenodo.
 
 ## How to cite the accompanying paper
 
-> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *An economic geography dataset of U.S. skill specialization, relatedness, and complexity.* Working paper, SSRN. [PLACEHOLDER: SSRN abstract URL — fill when paper posts]
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *An economic geography dataset of U.S. skill specialization, relatedness, and complexity.* Working paper, SSRN.
 
 ## Attribution and license
 
@@ -33,6 +33,6 @@ This material is based upon work supported by the National Science Foundation un
 ## Links
 
 - Live dashboard: <https://skills-econ-geog.netlify.app/>
+- Dashboard DOI: <https://doi.org/10.5281/zenodo.20337193>
 - Dataset repository: <https://github.com/AntJam-Howell/skills-econ-geog-data>
 - Dataset DOI (concept, resolves to latest): <https://doi.org/10.5281/zenodo.20330085>
-- Companion paper (SSRN): [PLACEHOLDER: SSRN abstract URL — fill when paper posts]

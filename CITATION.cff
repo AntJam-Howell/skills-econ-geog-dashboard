@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 title: "Geography of Skill Specialization and Complexity"
 message: "If you use this dashboard, please cite it as below."
+doi: 10.5281/zenodo.20337193
 type: software
 authors:
   - family-names: Howell

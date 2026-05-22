@@ -4,7 +4,7 @@ An open-access, interactive dashboard for exploring a U.S. county-year panel of 
 
 The dashboard is designed for researchers, students, and policy users who want to explore the panel without writing code. Every metric in the dashboard has an ⓘ icon next to it; click it for a one-paragraph plain-language definition. For the full variable names, definitions, and background on how each measure is developed and used, see the accompanying working paper:
 
-> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *Economic geography dataset of labor demand and skill specialization, diversity and complexity.* Working paper, SSRN. https://ssrn.com/abstract=XXXXXXX
+> Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *An economic geography dataset of U.S. skill specialization, relatedness, and complexity.* Working paper, SSRN.
 
 **Live dashboard**
 
