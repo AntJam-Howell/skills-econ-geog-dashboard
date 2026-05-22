@@ -14,8 +14,6 @@ If you use this dashboard, the underlying dataset, or the methodology in publish
 
 > Howell, A. (2026). *A U.S. county panel of skill specialization, relatedness, and complexity, across employer entity type* [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.20330085>
 
-To cite a specific version, use the v1.0.0 DOI: <https://doi.org/10.5281/zenodo.20330086>.
-
 ## How to cite the accompanying paper
 
 > Howell, A., Feldman, M., Lanahan, L., Kalathil, N., & Johnson, E. (2026). *An economic geography dataset of U.S. skill specialization, relatedness, and complexity.* Working paper, SSRN.
