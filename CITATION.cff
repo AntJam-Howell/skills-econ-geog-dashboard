@@ -16,9 +16,10 @@ abstract: >-
   of labor and skill demand derived from 433.6 million Lightcast (Burning
   Glass) job postings, 2010-2024. The dashboard is built on the Observable
   Framework and ships the county-year panel as a static CSV asset, parsed
-  client-side with d3.csvParse (no backend, no WebAssembly). Five pages cover
+  client-side with d3.csvParse (no backend, no WebAssembly). Six pages cover
   spatial visualization, ranked tables and trends, bivariate county
-  comparisons, individual county profiles, and a usage guide.
+  comparisons, individual county profiles, a usage guide, and a citation
+  reference.
 keywords:
   - economic geography
   - labor demand
@@ -32,4 +33,4 @@ keywords:
   - Observable Framework
 license: MIT
 version: 1.0.0
-date-released: "2026-05-14"
+date-released: "2026-05-21"
