@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "Economic Geography of Skill Specialization and Complexity: an interactive dashboard"
+title: "Geography of Skill Specialization and Complexity"
 message: "If you use this dashboard, please cite it as below."
 type: software
 authors:
@@ -7,7 +7,7 @@ authors:
     given-names: Anthony
     affiliation: "School of Public Affairs, Arizona State University"
     email: ajhowel5@asu.edu
-    orcid: "https://orcid.org/0000-0000-0000-0000"
+    orcid: "https://orcid.org/0000-0002-4211-0190"
 repository-code: "https://github.com/AntJam-Howell/skills-econ-geog-dashboard"
 url: "https://skills-econ-geog.netlify.app/"
 abstract: >-
