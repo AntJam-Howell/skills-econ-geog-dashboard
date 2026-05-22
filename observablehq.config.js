@@ -16,7 +16,7 @@ export default {
     {name: "County comparisons",    path: "/scatter"},
     {name: "County profiles",       path: "/county"},
     {name: "How to use the dashboard", path: "/about"},
-    {name: "Citation",                 path: "/citation"},
+    {name: "Credits and Acknowledgements", path: "/citation"},
   ],
 
   // Dark color theme + Framework's built-in "wide" layout token (removes

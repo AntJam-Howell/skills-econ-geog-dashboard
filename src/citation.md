@@ -1,8 +1,8 @@
 ---
-title: Citation
+title: Credits and Acknowledgements
 ---
 
-# Citation
+# Credits and Acknowledgements
 
 If you use this dashboard, the underlying dataset, or the methodology in published work, please cite the appropriate artifact below. Each is independently archived and citable.
 
@@ -12,7 +12,7 @@ If you use this dashboard, the underlying dataset, or the methodology in publish
 
 ## How to cite the dataset
 
-> Howell, A. (2026). *A U.S. county panel of skill specialization, relatedness, and complexity, across employer entity type* [Data set]. Zenodo. <https://doi.org/10.5281/zenodo.20330085>
+> Howell, A. (2026). *A U.S. county panel of skill specialization, relatedness, and complexity, across employer entity type* [Dataset]. Zenodo. <https://doi.org/10.5281/zenodo.20330085>
 
 ## How to cite the accompanying paper
 
@@ -33,4 +33,4 @@ This material is based upon work supported by the National Science Foundation un
 - Live dashboard: <https://skills-econ-geog.netlify.app/>
 - Dashboard DOI: <https://doi.org/10.5281/zenodo.20337193>
 - Dataset repository: <https://github.com/AntJam-Howell/skills-econ-geog-data>
-- Dataset DOI (concept, resolves to latest): <https://doi.org/10.5281/zenodo.20330085>
+- Dataset DOI: <https://doi.org/10.5281/zenodo.20330085>
